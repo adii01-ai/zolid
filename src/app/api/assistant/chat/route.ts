@@ -41,47 +41,52 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "The Studio assistant is not configured yet. Add GROQ_API_KEY to the server environment." },
+      { error: "The Studio assistant is not configured yet. Add GEMINI_API_KEY to the server environment." },
       { status: 503 },
     );
   }
 
-  const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const geminiResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      "x-goog-api-key": apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...payload.data.messages,
-      ],
-      temperature: 0.4,
-      max_tokens: 600,
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: payload.data.messages.map((message) => ({
+        role: message.role === "assistant" ? "model" : "user",
+        parts: [{ text: message.content }],
+      })),
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 600,
+      },
     }),
     signal: AbortSignal.timeout(30_000),
   }).catch((error: unknown) => {
     if (process.env.NODE_ENV === "development") {
-      console.error("[ZOLID] Groq request failed", error);
+      console.error("[ZOLID] Gemini request failed", error);
     }
     return null;
   });
 
-  if (!groqResponse) {
+  if (!geminiResponse) {
     return NextResponse.json(
       { error: "The assistant could not connect. Please try again." },
       { status: 502 },
     );
   }
 
-  if (!groqResponse.ok) {
-    console.error("[ZOLID] Groq returned an error", {
-      status: groqResponse.status,
+  if (!geminiResponse.ok) {
+    console.error("[ZOLID] Gemini returned an error", {
+      status: geminiResponse.status,
     });
     return NextResponse.json(
       { error: "The assistant is temporarily unavailable. Please try again." },
@@ -89,10 +94,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = (await groqResponse.json().catch(() => null)) as {
-    choices?: { message?: { content?: string | null } }[];
+  const result = (await geminiResponse.json().catch(() => null)) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
   } | null;
-  const reply = result?.choices?.[0]?.message?.content?.trim();
+  const reply = result?.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
 
   if (!reply) {
     return NextResponse.json(

@@ -45,9 +45,9 @@ describe("POST /api/assistant/chat", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("returns setup guidance when the server Groq key is missing", async () => {
+  it("returns setup guidance when the server Gemini key is missing", async () => {
     setupClient();
-    vi.stubEnv("GROQ_API_KEY", "");
+    vi.stubEnv("GEMINI_API_KEY", "");
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const { POST } = await import("../src/app/api/assistant/chat/route");
 
@@ -55,17 +55,17 @@ describe("POST /api/assistant/chat", () => {
 
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("GROQ_API_KEY"),
+      error: expect.stringContaining("GEMINI_API_KEY"),
     });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("proxies validated chat history to Groq and returns its reply", async () => {
+  it("proxies validated chat history to Gemini and returns its reply", async () => {
     setupClient();
-    vi.stubEnv("GROQ_API_KEY", "test-server-key");
+    vi.stubEnv("GEMINI_API_KEY", "test-server-key");
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
-        JSON.stringify({ choices: [{ message: { content: "Export a relief as a GLB from Studio." } }] }),
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: "Export a relief as a GLB from Studio." }] } }] }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),
     );
@@ -78,18 +78,24 @@ describe("POST /api/assistant/chat", () => {
       reply: "Export a relief as a GLB from Studio.",
     });
     expect(fetchSpy).toHaveBeenCalledWith(
-      "https://api.groq.com/openai/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: "Bearer test-server-key",
+          "x-goog-api-key": "test-server-key",
         }),
       }),
     );
+    const requestBody = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(requestBody).toMatchObject({
+      systemInstruction: { parts: [{ text: expect.stringContaining("Zolid Studio's AI assistant") }] },
+      contents: [{ role: "user", parts: [{ text: "How do I export a relief?" }] }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
+    });
   });
 
-  it("rejects malformed or oversized messages before calling Groq", async () => {
+  it("rejects malformed or oversized messages before calling Gemini", async () => {
     setupClient();
-    vi.stubEnv("GROQ_API_KEY", "test-server-key");
+    vi.stubEnv("GEMINI_API_KEY", "test-server-key");
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const { POST } = await import("../src/app/api/assistant/chat/route");
 
