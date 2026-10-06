@@ -16,6 +16,8 @@ const requestSchema = z.object({
     .max(12),
 });
 
+type AssistantMessage = z.infer<typeof requestSchema>["messages"][number];
+
 const systemPrompt = `You are Zolid Studio's AI assistant. Help users understand the app's image-to-depth-relief workflow, image requirements, available controls, exports, and credit rules. A depth relief costs 5 credits; a background-removal PNG export costs 5 credits. Uploading, previewing, and GLB export do not cost credits. Never claim you have generated or edited an image, changed an account, charged credits, or accessed a user's files. Be concise, practical, and honest about what the app can do.`;
 
 export async function POST(request: NextRequest) {
@@ -41,63 +43,64 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "The Studio assistant is not configured yet. Add GEMINI_API_KEY to the server environment." },
+      { error: "The Studio assistant is not configured yet. Add GROQ_API_KEY to the server environment." },
       { status: 503 },
     );
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const geminiBody = JSON.stringify({
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: payload.data.messages.map((message) => ({
-      role: message.role === "assistant" ? "model" : "user",
-      parts: [{ text: message.content }],
-    })),
-    generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 600,
-    },
+  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
+  const groqBody = JSON.stringify({
+    model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...payload.data.messages.map((message: AssistantMessage) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    ],
+    temperature: 0.4,
+    max_tokens: 600,
   });
-  let geminiResponse: Response | null = null;
+  let groqResponse: Response | null = null;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    geminiResponse = await fetch(geminiUrl, {
+    groqResponse = await fetch(groqUrl, {
       method: "POST",
       headers: {
-        "x-goog-api-key": apiKey,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: geminiBody,
+      body: groqBody,
       signal: AbortSignal.timeout(30_000),
     }).catch((error: unknown) => {
       if (process.env.NODE_ENV === "development") {
-        console.error("[ZOLID] Gemini request failed", error);
+        console.error("[ZOLID] Groq request failed", error);
       }
       return null;
     });
 
-    if (geminiResponse?.status !== 503 || attempt === 2) break;
+    if (groqResponse?.status !== 503 || attempt === 2) break;
     await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
   }
 
-  if (!geminiResponse) {
+  if (!groqResponse) {
     return NextResponse.json(
       { error: "The assistant could not connect. Please try again." },
       { status: 502 },
     );
   }
 
-  if (!geminiResponse.ok) {
-    console.error("[ZOLID] Gemini returned an error", {
-      status: geminiResponse.status,
+  if (!groqResponse.ok) {
+    console.error("[ZOLID] Groq returned an error", {
+      status: groqResponse.status,
     });
-    if (geminiResponse.status === 503) {
+    if (groqResponse.status === 503) {
       return NextResponse.json(
-        { error: "Gemini is busy right now. Please try again in a minute." },
+        { error: "Groq is busy right now. Please try again in a minute." },
         { status: 503 },
       );
     }
@@ -107,13 +110,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = (await geminiResponse.json().catch(() => null)) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  const result = (await groqResponse.json().catch(() => null)) as {
+    choices?: { message?: { content?: string | null } }[];
   } | null;
-  const reply = result?.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? "")
-    .join("")
-    .trim();
+  const reply = result?.choices?.[0]?.message?.content?.trim();
 
   if (!reply) {
     return NextResponse.json(
