@@ -10,6 +10,7 @@ import type { DepthMap } from "@/types/depth";
 import { exportDepthReliefGlb } from "@/lib/export/glb";
 import { CREDIT_COSTS } from "@/lib/billing/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import StudioAssistant from "@/components/studio/StudioAssistant";
 import {
   buildDepth,
   imageDataToDepthFrame,
@@ -137,6 +138,7 @@ export default function StudioWorkspace({
   recentGenerations,
 }: StudioWorkspaceProps) {
   const router = useRouter();
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<StudioTool>("depth");
   const [showThreePreview, setShowThreePreview] = useState(false);
   const [showOriginalPreview, setShowOriginalPreview] = useState(false);
@@ -680,6 +682,16 @@ export default function StudioWorkspace({
             <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[10px]">$</span>
             Billing
           </Link>
+          <button
+            type="button"
+            aria-expanded={assistantOpen}
+            aria-controls="studio-assistant-panel"
+            onClick={() => setAssistantOpen((open) => !open)}
+            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-xs ${assistantOpen ? "bg-[#1B1E25] font-semibold text-[#FFB547]" : "text-[#A9AFBA] hover:bg-[#15181E] hover:text-white"}`}
+          >
+            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[9px] font-semibold">AI</span>
+            Chat with AI
+          </button>
         </nav>
 
         <div className="mt-5 border-t border-[#252932] pt-4">
@@ -728,6 +740,15 @@ export default function StudioWorkspace({
           <Link href="/billing" className="mt-2 inline-flex w-full justify-center rounded bg-[#FFB547] px-2 py-2 text-[10px] font-semibold text-[#15130F] hover:brightness-105">View plans</Link>
         </div>
       </aside>
+      <button
+        type="button"
+        aria-expanded={assistantOpen}
+        aria-controls="studio-assistant-panel"
+        onClick={() => setAssistantOpen((open) => !open)}
+        className="fixed bottom-4 left-4 z-40 rounded-full border border-[#4A4030] bg-[#17191F] px-3 py-2 text-[11px] font-semibold text-[#FFB547] shadow-lg hover:bg-[#242833] focus-visible:outline-2 focus-visible:outline-[#FFB547] lg:hidden"
+      >
+        AI chat
+      </button>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:ml-0">
         <div>
@@ -1270,6 +1291,7 @@ export default function StudioWorkspace({
           </ul>
         )}
       </section>
+      <StudioAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} />
       {toast && (
         <div
           role="status"
