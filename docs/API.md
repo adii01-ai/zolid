@@ -1,47 +1,25 @@
 # API Contracts
 
-All responses: `{ ok: true, data }` or `{ ok: false, error: { code, message } }`. Validate input with Zod. All routes except webhooks require an authenticated Supabase session.
+All depth-generation routes require an authenticated Supabase session. Credit decisions are made by Postgres RPCs; the browser is never authoritative.
 
-## POST /api/jobs
-Create a Mode B job.
-- Body: `{ inputPath: string }` (must start with `{userId}/`)
-- Steps: auth → rate limit (e.g. 5/min/user, 20/min/IP) → daily cap check → `start_job` RPC → submit to GPU adapter → store `provider_job_id`, set `running`.
-- 200: `{ jobId, status: 'queued' | 'running' }`
-- 402 `INSUFFICIENT_CREDITS`, 429 `RATE_LIMITED`, 503 `DAILY_CAP_REACHED`, 400 `INVALID_INPUT`
-- If provider submit fails: call `refund_job`, return 502.
+## POST /api/depth/generate
 
-## GET /api/jobs
-List the user's jobs (paginated): `?limit=20&cursor=`.
+Accepts multipart form data with `file` as JPG, PNG, or WebP, up to 10 MB and at least 256 px on each side.
 
-## GET /api/jobs/[id]
-- Returns `{ id, status, error?, outputUrl? }` where `outputUrl` is a signed URL (10 min) once `done`.
-- 404 if not the user's job.
+The route authenticates the user, decodes and validates the image, reserves one generation atomically, runs the depth model, and returns `{ reservationId, width, height, values }`. If image processing or inference fails, it cancels the reservation and returns an error without consuming a free generation or purchased credit. A depleted account receives `402` with `code: "GENERATION_LIMIT_REACHED"`.
 
-## DELETE /api/jobs/[id]
-Delete the job row and its files.
+## POST /api/depth/complete
 
-## POST /api/gpu/webhook
-Called by the GPU provider. Verify the shared secret/signature first (reject otherwise).
-- done → download output, store in `outputs`, set `done`, `completed_at`.
-- failed → `refund_job`.
-- Idempotent: ignore if job already `done` or `failed`.
+Body: `{ reservationId: string }`.
 
-## POST /api/stripe/checkout
-- Body: `{ product: 'pro_monthly' | 'credit_pack' }`
-- Creates Checkout Session with `client_reference_id = userId`, `metadata.userId`, success URL `/billing?checkout=success` (display only, **grants nothing**), cancel URL `/billing`.
-- Returns `{ url }`.
+Called when the relief mesh and viewer are ready. Postgres atomically changes the reservation to complete and either decrements `profiles.credits` (writing a ledger entry) or increments `profiles.free_generations_used`. The response returns the current free counters and purchased-credit balance. Completion is idempotent for the same reservation.
 
-## POST /api/stripe/webhook
-Source of truth for billing. Read the **raw body**, verify with `STRIPE_WEBHOOK_SECRET`.
-| Event | Action |
-|---|---|
-| `checkout.session.completed` | Save `stripe_customer_id`; if credit pack, `grant_credits(..., 'purchase', event.id)` |
-| `invoice.paid` | Set plan `pro`; `grant_credits(..., 'subscription_grant', event.id)` |
-| `customer.subscription.deleted` | Set plan `free` |
-Return 200 quickly. Unknown events: 200 and ignore.
+## POST /api/depth/cancel
 
-## POST /api/stripe/portal
-Create a Stripe billing portal session for the user's `stripe_customer_id`.
+Body: `{ reservationId: string }`.
 
-## Error codes
-`UNAUTHENTICATED`, `INVALID_INPUT`, `INSUFFICIENT_CREDITS`, `RATE_LIMITED`, `DAILY_CAP_REACHED`, `NOT_FOUND`, `PROVIDER_ERROR`, `INTERNAL`.
+Cancels an owned pending reservation after a viewer/client failure. Cancellation never changes the account balance. Reservations older than 30 minutes are also expired during later reservation attempts.
+
+## Paid plans
+
+Billing and plans are visible in the app, but payment checkout is not implemented. No paid credits are granted until verified payment processing is connected. Future credit pack amounts and plan allowances must come from server-side product configuration/payment metadata.

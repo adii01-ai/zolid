@@ -1,162 +1,56 @@
-# PRD: Image-to-3D SaaS (working name: "Zolid")
+# PRD: Zolid Depth Relief Studio
 
-**Version:** 0.1 draft  |  **Date:** Oct 3, 2026  |  **Status:** For review
+**Version:** 0.2 draft | **Date:** Oct 5, 2026 | **Status:** For review
 
 ## 1. Summary
 
-A web app where anyone uploads a photo and gets an interactive 3D model they can rotate and download. A free in-browser **depth mode** attracts users; a paid **full 3D object mode** (GPU model) generates complete textured meshes.
+Zolid turns one uploaded image into an interactive front-facing depth relief that users can inspect and export as GLB. The product supports depth relief only.
 
-## 2. Problem
+## 2. Product flow
 
-Making a 3D model from a photo today means learning Blender or photogrammetry, or using tools that are expensive, slow, or require installs. Designers, game developers, makers, sellers, and hobbyists want a fast "photo in, 3D file out" workflow.
+1. Upload an image or select one of the local examples.
+2. Generate a depth map and view the relief in the existing Three.js viewer.
+3. Rotate, zoom, pan, adjust depth strength, and export GLB.
+4. New accounts receive three free successful generations.
+5. After free generations are used, generation requires purchased account credits. Paid checkout is pending and must never issue credits before verified payment.
 
-## 3. Target Users
+## 3. Generation allowance
 
-| Persona | Need |
-|---|---|
-| Indie game dev / 3D hobbyist | Quick base meshes to import into Blender/Unity |
-| Maker / 3D printer owner | STL from a photo of an object |
-| E-commerce seller | Rotatable 3D view of a product |
-| Designer / student | Fast prototypes and visual effects |
+- `free_generations_used` starts at 0 and is incremented only after the relief viewer is ready.
+- `free_generations_limit` defaults to 3 and is configurable per profile.
+- `profiles.credits` remains the purchased-credit balance and starts at 0.
+- Purchased credits are reserved before free generations.
+- The database enforces availability; refreshes, additional tabs, and frontend state changes cannot bypass it.
+- Failed inference or viewer setup cancels the reservation without consuming allowance.
+- Concurrent requests are serialized with a profile-row lock and reservation records.
 
-## 4. Goals and Non-Goals
+## 4. Functional requirements
 
-**Goals**
-- A first-time visitor sees a 3D result within 60 seconds, with no signup.
-- Full 3D generation completes in under 2 minutes for 95% of jobs.
-- Gross margin of at least 65% on paid generations.
-- Charge real money within 6 weeks of starting the build.
+| ID  | Requirement                                                                                     |
+| --- | ----------------------------------------------------------------------------------------------- |
+| F1  | Accept JPG, PNG, and WebP images up to 10 MB and at least 256 px on each side.                  |
+| F2  | Offer local example images through the existing upload state.                                   |
+| F3  | Run depth estimation and build the front-facing relief geometry.                                |
+| F4  | Keep the existing 3D viewer controls and GLB export.                                            |
+| F5  | Require a signed-in user for persistent allowance tracking.                                     |
+| F6  | Enforce free and purchased balances with authenticated atomic database functions.               |
+| F7  | Deduct only after successful depth inference and viewer setup; release reservations on failure. |
+| F8  | Show remaining free generations and a plans link after allowance is exhausted.                  |
+| F9  | Do not grant purchased credits until verified payment processing is implemented.                |
+| F10 | Preserve recent model/history UI.                                                               |
 
-**Non-goals (v1)**
-- Multi-image or video photogrammetry
-- Text-to-3D
-- Rigging and animation
-- Team workspaces, public marketplace, mobile apps
-- Knowledge-graph mode (deferred to v2)
+## 5. Payments
 
-## 5. Product Modes
+Billing plans are displayed as pending while payment checkout is unimplemented. Prices and credit quantities must be read from trusted server-side product configuration. Only a verified, idempotent payment webhook may grant paid credits.
 
-| Mode | Input | Output | Where it runs | Cost to us |
-|---|---|---|---|---|
-| **A. Depth relief (free)** | 1 photo | Front-facing 3D relief, GLB/OBJ/PLY | User's browser | $0 |
-| **B. Full 3D object (paid)** | 1 photo, ideally clean background | Complete textured mesh, GLB/OBJ/STL | GPU worker | Cents per run |
+## 6. Security and data
 
-Hidden sides in Mode B are AI-generated guesses. The UI must say so.
+- Supabase `auth.users` is the sole user identity source.
+- Existing `profiles.credits` stores purchased credits; no duplicate user or balance table is added.
+- RLS protects user-readable profile and ledger data.
+- SECURITY DEFINER RPCs validate `auth.uid()` and perform reservation, completion, and cancellation atomically.
+- Images are sent to the authenticated server route for depth inference; the application must disclose its retention policy before launch.
 
-## 6. User Flow
+## 7. Out of scope
 
-1. Land on homepage, upload a photo, and try Mode A with no account.
-2. Sign up (email or Google) to unlock Mode B and receive free credits.
-3. Upload photo, optional automatic background removal, confirm.
-4. Job is queued; progress bar and status shown.
-5. View model in 3D viewer; download in chosen format.
-6. When credits run out, buy a plan or credit pack.
-7. Past models are listed in a personal gallery.
-
-## 7. Functional Requirements
-
-### P0 (must have for launch)
-
-| ID | Requirement |
-|---|---|
-| F1 | Image upload (JPG/PNG/WebP, max 10 MB, min 256 px) with client-side validation |
-| F2 | Mode A: in-browser depth estimation, mesh generation, textured preview |
-| F3 | 3D viewer: orbit, zoom, pan, lighting, wireframe toggle |
-| F4 | Export: GLB for both modes; OBJ and STL for Mode B |
-| F5 | Auth: email and Google sign-in |
-| F6 | Mode B: job creation, queue, status polling, result storage |
-| F7 | Automatic background removal before Mode B |
-| F8 | Credit system: signup bonus, deduction on job start, automatic refund on failure |
-| F9 | Stripe Checkout for plans/credit packs; **webhook is the only way credits or plan change** |
-| F10 | Gallery of the user's past models (view, download, delete) |
-| F11 | Rate limits per user and IP; daily GPU spend cap |
-| F12 | Terms of Service, Privacy Policy, content policy page |
-
-### P1 (soon after launch)
-- Share link to a public viewer page
-- Quality presets (fast / high)
-- Email notification when a job finishes
-- Basic usage dashboard and billing portal
-
-### P2 (later)
-- API access, batch uploads, mesh cleanup/decimation, knowledge-graph mode, teams
-
-## 8. Non-Functional Requirements
-
-| Area | Requirement |
-|---|---|
-| Performance | Mode A result in under 15 s on a mid-range laptop; Mode B p95 under 120 s |
-| Reliability | Failed jobs are retried once, then fail with automatic refund |
-| Security | Row-level security on all user data; signed URLs for files; secrets only server-side |
-| Privacy | Mode A images never leave the device; Mode B images deleted after 30 days unless saved by user |
-| Compatibility | Latest Chrome, Safari, Edge, Firefox; WebGL2 required; graceful message on unsupported devices |
-| Accessibility | Keyboard-operable controls, readable contrast, alt text |
-
-## 9. Technical Approach
-
-- **Frontend:** Next.js, React Three Fiber, drei; Transformers.js for depth estimation
-- **Backend:** Next.js API routes; Supabase (Auth, Postgres, Storage)
-- **GPU worker:** open-source image-to-3D model on pay-per-second serverless GPU (Modal, Replicate, or RunPod). **Model choice is an open decision; verify commercial license before launch.**
-- **Payments:** Stripe Checkout and webhooks
-- **Hosting:** Vercel
-
-**Data model (core tables)**
-- `profiles`: user id, plan, credits
-- `jobs`: id, user id, status (queued/running/done/failed), input path, output path, error, timestamps
-- `credit_ledger`: user id, delta, reason, job id, timestamp
-
-## 10. Monetization
-
-| Tier | Includes |
-|---|---|
-| Free | Unlimited Mode A, about 3 Mode B credits at signup |
-| Credit pack | One-time purchase of generations |
-| Pro (monthly) | Monthly credit allowance, higher quality, priority queue, longer storage |
-
-Pricing rule: **price per generation at least 3x measured GPU cost.** Exact prices are set after Phase 2 cost measurement.
-
-## 11. Success Metrics
-
-| Metric | Target (first 90 days after launch) |
-|---|---|
-| Visitor to Mode A try | 40% |
-| Mode A user to signup | 10% |
-| Signup to first Mode B job | 50% |
-| Free to paid conversion | 3% |
-| Job success rate | 95% or higher |
-| Gross margin on paid usage | 65% or higher |
-| 30-day retention of paying users | 60% |
-
-## 12. Risks and Mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Model license forbids commercial use | Check license first; keep a swap-in alternative model |
-| GPU cost spikes or abuse | Login required for GPU, rate limits, spend cap, credit system |
-| Output quality disappoints on messy photos | Background removal, clear UI guidance, example gallery |
-| Users upload copyrighted or harmful images | Content policy, reporting, ability to remove content |
-| Payment fraud or unlock bypass | Webhook-only entitlements, never URL parameters |
-| Cold-start latency on serverless GPU | Progress UI, set expectations, consider warm instance if volume justifies |
-
-## 13. Milestones
-
-| Week | Deliverable |
-|---|---|
-| 1 | Upload, Mode A, viewer, GLB export |
-| 2 | Auth, storage, profiles, RLS |
-| 3 | GPU worker, job queue, Mode B end to end |
-| 4 | Credits, Stripe, webhook |
-| 5 | Gallery, rate limits, error handling and refunds |
-| 6 | Landing page, legal pages, closed beta (10-20 users) |
-
-## 14. Open Questions
-
-1. Which image-to-3D model gives the best quality with a commercial-friendly license?
-2. Which GPU provider gives the lowest real cost per generation?
-3. Final product name and domain?
-4. Credit packs only, subscription only, or both at launch?
-5. Which countries will we sell to (affects tax and Stripe setup)?
-
-## 15. Next Step
-
-Approve this PRD, then start Week 1: project setup, upload UI, browser depth mode, viewer, and GLB export.
+Complete object reconstruction, text-to-3D, multi-image reconstruction, subscriptions, and payment checkout until separately implemented and verified.
