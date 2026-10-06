@@ -98,16 +98,10 @@ export default function AuthForm({
   }
 
   async function signInWithGoogle() {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl) {
-      setFeedback({ type: "error", message: "Google sign-in is temporarily unavailable." });
-      return;
-    }
-
     setIsSigningInWithGoogle(true);
     setFeedback(null);
     try {
-      const callbackUrl = new URL("/auth/callback", appUrl);
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
       callbackUrl.searchParams.set("next", destination);
       const { error } = await createSupabaseBrowserClient().auth.signInWithOAuth({
         provider: "google",
