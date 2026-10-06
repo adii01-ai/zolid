@@ -50,32 +50,39 @@ export async function POST(request: NextRequest) {
   }
 
   const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const geminiResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-    method: "POST",
-    headers: {
-      "x-goog-api-key": apiKey,
-      "Content-Type": "application/json",
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const geminiBody = JSON.stringify({
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: payload.data.messages.map((message) => ({
+      role: message.role === "assistant" ? "model" : "user",
+      parts: [{ text: message.content }],
+    })),
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 600,
     },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: payload.data.messages.map((message) => ({
-        role: message.role === "assistant" ? "model" : "user",
-        parts: [{ text: message.content }],
-      })),
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 600,
-      },
-    }),
-    signal: AbortSignal.timeout(30_000),
-  }).catch((error: unknown) => {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[ZOLID] Gemini request failed", error);
-    }
-    return null;
   });
+  let geminiResponse: Response | null = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    geminiResponse = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: geminiBody,
+      signal: AbortSignal.timeout(30_000),
+    }).catch((error: unknown) => {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[ZOLID] Gemini request failed", error);
+      }
+      return null;
+    });
+
+    if (geminiResponse?.status !== 503 || attempt === 2) break;
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
 
   if (!geminiResponse) {
     return NextResponse.json(
@@ -88,6 +95,12 @@ export async function POST(request: NextRequest) {
     console.error("[ZOLID] Gemini returned an error", {
       status: geminiResponse.status,
     });
+    if (geminiResponse.status === 503) {
+      return NextResponse.json(
+        { error: "Gemini is busy right now. Please try again in a minute." },
+        { status: 503 },
+      );
+    }
     return NextResponse.json(
       { error: "The assistant is temporarily unavailable. Please try again." },
       { status: 502 },

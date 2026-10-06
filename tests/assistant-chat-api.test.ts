@@ -93,6 +93,44 @@ describe("POST /api/assistant/chat", () => {
     });
   });
 
+  it("retries Gemini once after a temporary overload", async () => {
+    setupClient();
+    vi.stubEnv("GEMINI_API_KEY", "test-server-key");
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(null, { status: 503 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ candidates: [{ content: { parts: [{ text: "Try again" }] } }] }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    const { POST } = await import("../src/app/api/assistant/chat/route");
+
+    const response = await POST(createRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ reply: "Try again" });
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("returns a clear message when Gemini remains overloaded", async () => {
+    setupClient();
+    vi.stubEnv("GEMINI_API_KEY", "test-server-key");
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 503 }));
+    const { POST } = await import("../src/app/api/assistant/chat/route");
+
+    const response = await POST(createRequest());
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: "Gemini is busy right now. Please try again in a minute.",
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+  });
+
   it("rejects malformed or oversized messages before calling Gemini", async () => {
     setupClient();
     vi.stubEnv("GEMINI_API_KEY", "test-server-key");
