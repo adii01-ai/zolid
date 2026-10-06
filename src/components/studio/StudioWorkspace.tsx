@@ -72,6 +72,28 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality = 0.92) {
   });
 }
 
+async function createStoredPreview(previewDataUrl: string) {
+  const response = await fetch(previewDataUrl);
+  if (!response.ok) throw new Error("The relief preview could not be read.");
+  const bitmap = await createImageBitmap(await response.blob());
+  const scale = Math.min(1, 256 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("The relief preview could not be prepared.");
+  }
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const storedPreview = canvas.toDataURL("image/jpeg", 0.55);
+  if (storedPreview.length > 180_000) {
+    throw new Error("The relief preview could not be compressed for saving.");
+  }
+  return storedPreview;
+}
+
 async function createOrbSample() {
   const canvas = document.createElement("canvas");
   canvas.width = 512;
@@ -483,10 +505,11 @@ export default function StudioWorkspace({
     completionStarted.current = true;
     setGenerationStage("Saving generation...");
     try {
+      const storedPreview = await createStoredPreview(previewDataUrl);
       const response = await fetch("/api/depth/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reservationId, previewDataUrl }),
+        body: JSON.stringify({ reservationId, previewDataUrl: storedPreview }),
       });
       const result = (await response.json().catch(() => null)) as {
         error?: string;
@@ -501,7 +524,7 @@ export default function StudioWorkspace({
       router.refresh();
       setGenerationStage("Depth relief ready");
       setReservationId(null);
-      rememberResult("Depth relief", previewDataUrl);
+      rememberResult("Depth relief", storedPreview);
       showToast("Depth relief generated and saved to Gallery.");
     } catch (error) {
       completionStarted.current = false;

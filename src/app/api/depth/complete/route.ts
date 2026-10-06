@@ -26,9 +26,18 @@ export async function POST(request: NextRequest) {
     await request.json().catch(() => null),
   );
   if (!payload.success) {
+    const previewTooLarge = payload.error.issues.some(
+      (issue) =>
+        issue.path[0] === "previewDataUrl" && issue.code === "too_big",
+    );
     return NextResponse.json(
-      { error: "Invalid generation reservation." },
-      { status: 400 },
+      {
+        code: previewTooLarge ? "PREVIEW_TOO_LARGE" : "INVALID_RESERVATION",
+        error: previewTooLarge
+          ? "The relief preview was too large to save. Please generate again."
+          : "Invalid generation reservation.",
+      },
+      { status: previewTooLarge ? 413 : 400 },
     );
   }
 
@@ -37,16 +46,19 @@ export async function POST(request: NextRequest) {
     p_preview_data_url: payload.data.previewDataUrl,
   });
   if (error || !Array.isArray(data) || !data[0]) {
-    if (process.env.NODE_ENV === "development" && error) {
+    if (error) {
       console.error("[ZOLID] Could not complete depth reservation", {
         code: error.code,
         message: error.message,
       });
+    } else {
+      console.error("[ZOLID] Depth completion RPC returned no account balance.");
     }
     return NextResponse.json(
       {
+        code: "CREDIT_COMPLETION_FAILED",
         error:
-          "The generation could not be recorded. Your allowance was not changed.",
+          "The generation could not be recorded, so no credits were charged. Please retry.",
       },
       { status: 409 },
     );
