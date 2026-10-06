@@ -1,34 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import CheckoutButton from "@/components/billing/CheckoutButton";
 import { CREDIT_BUNDLES, CREDIT_COSTS } from "@/lib/billing/plans";
-
-const steps = [
-  {
-    title: "Upload",
-    description:
-      "Choose a JPG, PNG or WebP at least 256 × 256 px. Start with the sample if you want to see the result first.",
-  },
-  {
-    title: "Generate",
-    description:
-      "Set relief strength and smoothing, then generate. Each depth relief uses 5 credits.",
-  },
-  {
-    title: "Tilt and download",
-    description:
-      "Move across the 3D preview to inspect the relief from every side, then download the frame as a PNG.",
-  },
-];
-
-const useCases = [
-  ["Game developers", "Turn reference photos into relief assets you can check from several angles."],
-  ["3D printing", "Preview how a front-facing relief reads from different angles before you print it."],
-  ["Online sellers", "Clean up product photos with the background removed, ready for listings."],
-  ["Designers", "Explore dimension and depth from a single reference image."],
-];
+import { landingCopy, type LandingLocale } from "@/components/landing/translations";
 
 function orb(context: CanvasRenderingContext2D, withBackground: boolean) {
   context.save();
@@ -48,7 +24,7 @@ function orb(context: CanvasRenderingContext2D, withBackground: boolean) {
   context.restore();
 }
 
-function ReliefDemo() {
+function ReliefDemo({ copy }: { copy: (typeof landingCopy)[LandingLocale]["demo"] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -188,17 +164,17 @@ function ReliefDemo() {
         width={320}
         height={320}
         role="img"
-        aria-label="Live depth relief preview of a shaded amber orb. Move your cursor to tilt it."
+        aria-label={copy.aria}
       />
       <figcaption className="zolid-figure-caption">
-        <span>Sample image</span>
-        <span>Move your cursor to tilt</span>
+        <span>{copy.sample}</span>
+        <span>{copy.tilt}</span>
       </figcaption>
     </figure>
   );
 }
 
-function ToolComparison() {
+function ToolComparison({ copy }: { copy: (typeof landingCopy)[LandingLocale]["comparison"] }) {
   const rangeRef = useRef<HTMLInputElement>(null);
   const originalRef = useRef<HTMLCanvasElement>(null);
   const cutoutRef = useRef<HTMLCanvasElement>(null);
@@ -228,18 +204,36 @@ function ToolComparison() {
   return (
     <figure className="zolid-compare">
       <div className="zolid-compare-frame">
-        <canvas ref={originalRef} width={320} height={320} role="img" aria-label="Original amber orb on a light background" />
-        <canvas ref={cutoutRef} width={320} height={320} role="img" aria-label="Amber orb cut out against a transparent background" />
+        <canvas ref={originalRef} width={320} height={320} role="img" aria-label={copy.originalImage} />
+        <canvas ref={cutoutRef} width={320} height={320} role="img" aria-label={copy.cutoutImage} />
         <span className="zolid-compare-divider" aria-hidden="true" />
       </div>
-      <label className="zolid-visually-hidden" htmlFor="compare-range">Compare original and cutout</label>
-      <input ref={rangeRef} className="zolid-compare-range" id="compare-range" type="range" min="0" max="100" defaultValue="50" aria-label="Compare original and cutout" />
-      <figcaption className="zolid-compare-caption"><span>Original</span><span>Cutout</span></figcaption>
+      <label className="zolid-visually-hidden" htmlFor="compare-range">{copy.aria}</label>
+      <input ref={rangeRef} className="zolid-compare-range" id="compare-range" type="range" min="0" max="100" defaultValue="50" aria-label={copy.aria} />
+      <figcaption className="zolid-compare-caption"><span>{copy.original}</span><span>{copy.cutout}</span></figcaption>
     </figure>
   );
 }
 
 export default function ZolidLanding() {
+  const [locale, setLocale] = useState<LandingLocale>("en");
+  const [localeReady, setLocaleReady] = useState(false);
+  const copy = landingCopy[locale];
+
+  useEffect(() => {
+    const savedLocale = window.localStorage.getItem("zolid-locale");
+    if (savedLocale && savedLocale in landingCopy) {
+      setLocale(savedLocale as LandingLocale);
+    }
+    setLocaleReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!localeReady) return;
+    window.localStorage.setItem("zolid-locale", locale);
+    document.documentElement.lang = locale;
+  }, [locale, localeReady]);
+
   return (
     <div className="zolid-landing">
       <header className="zolid-header">
@@ -248,10 +242,21 @@ export default function ZolidLanding() {
             <span className="zolid-brand-mark" aria-hidden="true">Z</span><span>Zolid</span>
           </Link>
           <nav className="zolid-nav" aria-label="Main navigation">
-            <a href="#how">How it works</a><a href="#tools">Tools</a><a href="#use">Use cases</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+            <a href="#how">{copy.nav[0]}</a><a href="#tools">{copy.nav[1]}</a><a href="#use">{copy.nav[2]}</a><a href="#pricing">{copy.nav[3]}</a><a href="#faq">{copy.nav[4]}</a>
           </nav>
-          <Link className="zolid-button zolid-button-ghost zolid-login" href="/auth/login">Log in</Link>
-          <Link className="zolid-button zolid-header-cta" href="/studio">Start free</Link>
+          <div className="zolid-header-actions">
+            <label className="zolid-language-control">
+              <span className="zolid-visually-hidden">{copy.language}</span>
+              <select aria-label={copy.language} value={locale} onChange={(event) => setLocale(event.target.value as LandingLocale)}>
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+              </select>
+            </label>
+            <Link className="zolid-button zolid-button-ghost zolid-login" href="/auth/login">{copy.login}</Link>
+            <Link className="zolid-button zolid-header-cta" href="/studio">{copy.startFree}</Link>
+          </div>
         </div>
       </header>
 
@@ -259,25 +264,25 @@ export default function ZolidLanding() {
         <section className="zolid-hero" aria-labelledby="hero-heading">
           <div className="zolid-wrap zolid-hero-grid">
             <div className="zolid-hero-copy">
-              <span className="zolid-offer">15 starter credits for every new account.</span>
-              <h1 id="hero-heading">Turn any photo into a relief you can tilt.</h1>
-              <p className="zolid-hero-lede">Upload a front-facing photo and get a depth relief you can inspect, tilt and download. Remove the background in the same workflow.</p>
-              <a className="zolid-button zolid-button-ghost" href="#how">See how it works</a>
-              <p className="zolid-hero-note">Start with 15 credits. Buy more only when you need them.</p>
+              <span className="zolid-offer">{copy.offer}</span>
+              <h1 id="hero-heading">{copy.heroTitle}</h1>
+              <p className="zolid-hero-lede">{copy.heroText}</p>
+              <a className="zolid-button zolid-button-ghost" href="#how">{copy.howButton}</a>
+              <p className="zolid-hero-note">{copy.heroNote}</p>
             </div>
-            <ReliefDemo />
+            <ReliefDemo copy={copy.demo} />
           </div>
         </section>
 
         <section className="zolid-section" id="how" aria-labelledby="how-heading">
           <div className="zolid-wrap">
-            <h2 id="how-heading">From photo to model in three steps.</h2>
+            <h2 id="how-heading">{copy.stepsTitle}</h2>
             <ol className="zolid-steps">
-              {steps.map((step, index) => (
-                <li className="zolid-step" key={step.title}>
+              {copy.steps.map(([title, description], index) => (
+                <li className="zolid-step" key={title}>
                   <span className="zolid-step-number">{index + 1}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
                 </li>
               ))}
             </ol>
@@ -287,22 +292,22 @@ export default function ZolidLanding() {
         <section className="zolid-section" id="tools" aria-labelledby="tools-heading">
           <div className="zolid-wrap zolid-tools-grid">
             <div className="zolid-tools-copy">
-              <h2 id="tools-heading">Two tools, one upload.</h2>
-              <p className="zolid-tools-lede">Upload once, then switch between depth relief and background removal without starting over.</p>
+              <h2 id="tools-heading">{copy.toolsTitle}</h2>
+              <p className="zolid-tools-lede">{copy.toolsIntro}</p>
               <ul className="zolid-tool-list">
-                <li><strong>Depth relief</strong><p>Brighter areas sit closer to the viewer, so tilting reveals depth. Adjust strength and smoothing as you go.</p></li>
-                <li><strong>Background removal</strong><p>Removes the backdrop only where it connects to the edges, so similar colors inside the subject stay. Tune tolerance and edge softness, then export a transparent or solid-color PNG.</p></li>
+                <li><strong>{copy.depthRelief}</strong><p>{copy.depthDescription}</p></li>
+                <li><strong>{copy.backgroundRemoval}</strong><p>{copy.backgroundDescription}</p></li>
               </ul>
             </div>
-            <ToolComparison />
+            <ToolComparison copy={copy.comparison} />
           </div>
         </section>
 
         <section className="zolid-section" id="use" aria-labelledby="use-heading">
           <div className="zolid-wrap">
-            <h2 id="use-heading">Made for people who make things.</h2>
+            <h2 id="use-heading">{copy.useTitle}</h2>
             <div className="zolid-use-rows">
-              {useCases.map(([title, description]) => (
+              {copy.useCases.map(([title, description]) => (
                 <div className="zolid-use-row" key={title}><h3>{title}</h3><p>{description}</p></div>
               ))}
             </div>
@@ -311,28 +316,28 @@ export default function ZolidLanding() {
 
         <section className="zolid-section" id="pricing" aria-labelledby="pricing-heading">
           <div className="zolid-wrap">
-            <h2 id="pricing-heading">Pricing</h2>
-            <p className="zolid-pricing-intro">Start with 15 credits. Depth relief and each PNG export use 5 credits. Paid credit bundles are one-time purchases and credits do not expire.</p>
+            <h2 id="pricing-heading">{copy.pricingTitle}</h2>
+            <p className="zolid-pricing-intro">{copy.pricingIntro}</p>
             <div className="zolid-plans">
-              <section className="zolid-plan" aria-label="Free plan">
-                <h3>Free</h3><p className="zolid-price">₹0</p>
-                <ul><li>15 starter credits</li><li>{CREDIT_COSTS.depthRelief} credits per depth relief</li><li>{CREDIT_COSTS.backgroundPng} credits per PNG export</li></ul>
-                <Link className="zolid-button" href="/studio">Start free</Link>
+              <section className="zolid-plan" aria-label={copy.plans.freeAria}>
+                <h3>{copy.plans.free}</h3><p className="zolid-price">₹0</p>
+                <ul><li>15 {copy.plans.starterCredits}</li><li>{CREDIT_COSTS.depthRelief} {copy.plans.perDepth}</li><li>{CREDIT_COSTS.backgroundPng} {copy.plans.perPng}</li></ul>
+                <Link className="zolid-button" href="/studio">{copy.startFree}</Link>
               </section>
-              <section className="zolid-plan" aria-label="Monthly credit bundle">
-                <h3>{CREDIT_BUNDLES.monthly.name}</h3><p className="zolid-price">{CREDIT_BUNDLES.monthly.displayPrice}</p>
-                <ul><li>{CREDIT_BUNDLES.monthly.credits} credits</li><li>One-time payment</li><li>Credits do not expire</li></ul>
-                <CheckoutButton bundleId="monthly" className="zolid-button" />
+              <section className="zolid-plan" aria-label={copy.plans.monthlyAria}>
+                <h3>{copy.plans.monthly}</h3><p className="zolid-price">{CREDIT_BUNDLES.monthly.displayPrice}</p>
+                <ul><li>{CREDIT_BUNDLES.monthly.credits} credits</li><li>{copy.plans.oneTime}</li><li>{copy.plans.noExpiry}</li></ul>
+                <CheckoutButton bundleId="monthly" className="zolid-button" labels={copy.checkout} />
               </section>
-              <section className="zolid-plan" aria-label="Weekly credit bundle">
-                <h3>{CREDIT_BUNDLES.weekly.name}</h3><p className="zolid-price">{CREDIT_BUNDLES.weekly.displayPrice}</p>
-                <ul><li>{CREDIT_BUNDLES.weekly.credits} credits</li><li>One-time payment</li><li>Credits do not expire</li></ul>
-                <CheckoutButton bundleId="weekly" className="zolid-button" />
+              <section className="zolid-plan" aria-label={copy.plans.weeklyAria}>
+                <h3>{copy.plans.weekly}</h3><p className="zolid-price">{CREDIT_BUNDLES.weekly.displayPrice}</p>
+                <ul><li>{CREDIT_BUNDLES.weekly.credits} credits</li><li>{copy.plans.oneTime}</li><li>{copy.plans.noExpiry}</li></ul>
+                <CheckoutButton bundleId="weekly" className="zolid-button" labels={copy.checkout} />
               </section>
-              <section className="zolid-plan" aria-label="Six-month credit bundle">
-                <h3>{CREDIT_BUNDLES.sixMonths.name}</h3><p className="zolid-price">{CREDIT_BUNDLES.sixMonths.displayPrice}</p>
-                <ul><li>{CREDIT_BUNDLES.sixMonths.credits} credits</li><li>One-time payment</li><li>Credits do not expire</li></ul>
-                <CheckoutButton bundleId="sixMonths" className="zolid-button" />
+              <section className="zolid-plan" aria-label={copy.plans.sixMonthsAria}>
+                <h3>{copy.plans.sixMonths}</h3><p className="zolid-price">{CREDIT_BUNDLES.sixMonths.displayPrice}</p>
+                <ul><li>{CREDIT_BUNDLES.sixMonths.credits} credits</li><li>{copy.plans.oneTime}</li><li>{copy.plans.noExpiry}</li></ul>
+                <CheckoutButton bundleId="sixMonths" className="zolid-button" labels={copy.checkout} />
               </section>
             </div>
           </div>
@@ -340,25 +345,22 @@ export default function ZolidLanding() {
 
         <section className="zolid-section" id="faq" aria-labelledby="faq-heading">
           <div className="zolid-wrap">
-            <h2 id="faq-heading">Frequently asked questions.</h2>
+            <h2 id="faq-heading">{copy.faqTitle}</h2>
             <div className="zolid-faq-list">
-              <details><summary>Is my photo private?</summary><p>In this version, both tools process your photo in your browser. Nothing is uploaded to a server.</p></details>
-              <details><summary>Can I use the models commercially?</summary><p>Commercial licensing terms will be published before paid plans open.</p></details>
-              <details><summary>Which photos work best?</summary><p>A single subject with clear edges, even lighting and a simple background. Use images at least 256 × 256 px. Front-facing shots give the best relief.</p></details>
-              <details><summary>What does the depth relief show?</summary><p>Brighter areas are placed closer to the viewer and darker areas further back. Tilt the preview to see the depth, then download a frame.</p></details>
+              {copy.faq.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}
             </div>
           </div>
         </section>
 
         <section className="zolid-closing" aria-labelledby="closing-heading">
-          <div className="zolid-wrap"><h2 id="closing-heading">Start with one photo.</h2></div>
+          <div className="zolid-wrap"><h2 id="closing-heading">{copy.closing}</h2></div>
         </section>
       </main>
 
       <footer className="zolid-footer">
         <div className="zolid-wrap zolid-footer-row">
-          <Link className="zolid-footer-brand" href="#top" aria-label="Zolid home"><span className="zolid-footer-mark" aria-hidden="true">Z</span><span>Zolid</span></Link>
-          <span>© 2026 Zolid.</span>
+          <Link className="zolid-footer-brand" href="#top" aria-label={copy.footerHome}><span className="zolid-footer-mark" aria-hidden="true">Z</span><span>Zolid</span></Link>
+          <span>{copy.footerRights}</span>
         </div>
       </footer>
     </div>

@@ -6,9 +6,16 @@ import type { CreditBundleId } from "@/lib/billing/plans";
 export default function CheckoutButton({
   bundleId,
   className,
+  labels,
 }: {
   bundleId: CreditBundleId;
   className?: string;
+  labels?: {
+    buy: string;
+    opening: string;
+    error: string;
+    connectionError: string;
+  };
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,12 +39,12 @@ export default function CheckoutButton({
         return;
       }
       if (!response.ok || !result?.url) {
-        setError(result?.error ?? "Checkout could not start. Please try again.");
+        setError(result?.error ?? labels?.error ?? "Checkout could not start. Please try again.");
         return;
       }
       window.location.assign(result.url);
     } catch {
-      setError("Checkout could not start. Check your connection and try again.");
+      setError(labels?.connectionError ?? "Checkout could not start. Check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -51,7 +58,7 @@ export default function CheckoutButton({
         disabled={isLoading}
         onClick={() => void startCheckout()}
       >
-        {isLoading ? "Opening checkout..." : "Buy credits"}
+        {isLoading ? labels?.opening ?? "Opening checkout..." : labels?.buy ?? "Buy credits"}
       </button>
       {error && <p className="mt-2 text-xs text-rose-300" role="alert">{error}</p>}
     </div>

@@ -117,6 +117,30 @@ body {
   color: var(--zolid-text);
 }
 
+.zolid-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.zolid-language-control select {
+  max-width: 112px;
+  border: 1px solid var(--zolid-line);
+  border-radius: 6px;
+  background: var(--zolid-panel);
+  color: var(--zolid-text);
+  padding: 9px 26px 9px 10px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.zolid-language-control select:focus-visible {
+  outline: 2px solid var(--zolid-amber);
+  outline-offset: 2px;
+}
+
 .zolid-button {
   display: inline-flex;
   min-height: 40px;
@@ -610,6 +634,16 @@ body {
   .zolid-header-row {
     min-height: 62px;
     gap: 8px;
+  }
+
+  .zolid-header-actions {
+    gap: 4px;
+  }
+
+  .zolid-language-control select {
+    max-width: 88px;
+    padding-right: 20px;
+    padding-left: 7px;
   }
 
   .zolid-brand {
