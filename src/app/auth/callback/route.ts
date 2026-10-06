@@ -4,6 +4,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const callbackUrl = request.nextUrl;
+  const appOrigin = process.env.RENDER_EXTERNAL_HOSTNAME
+    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`
+    : request.nextUrl.origin;
   const code = callbackUrl.searchParams.get("code");
   const tokenHash = callbackUrl.searchParams.get("token_hash");
   const type = callbackUrl.searchParams.get("type");
@@ -13,7 +16,7 @@ export async function GET(request: NextRequest) {
     : getSafeAuthRedirect(callbackUrl.searchParams.get("next"));
 
   if (tokenHash && type) {
-    const confirmUrl = new URL("/auth/confirm", request.url);
+    const confirmUrl = new URL("/auth/confirm", appOrigin);
     confirmUrl.searchParams.set("token_hash", tokenHash);
     confirmUrl.searchParams.set("type", type);
     confirmUrl.searchParams.set("next", nextPath);
@@ -22,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code) {
-    const loginUrl = new URL("/auth/login", request.url);
+    const loginUrl = new URL("/auth/login", appOrigin);
     loginUrl.searchParams.set("error", "callback");
     loginUrl.searchParams.set("next", nextPath);
     if (type === "recovery") loginUrl.searchParams.set("recovery", "1");
@@ -33,12 +36,12 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
-    const loginUrl = new URL("/auth/login", request.url);
+    const loginUrl = new URL("/auth/login", appOrigin);
     loginUrl.searchParams.set("error", "callback");
     loginUrl.searchParams.set("next", nextPath);
     if (type === "recovery") loginUrl.searchParams.set("recovery", "1");
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.redirect(new URL(nextPath, request.url));
+  return NextResponse.redirect(new URL(nextPath, appOrigin));
 }
