@@ -78,7 +78,7 @@ describe("POST /api/assistant/chat", () => {
       reply: "Export a relief as a GLB from Studio.",
     });
     expect(fetchSpy).toHaveBeenCalledWith(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
       expect.objectContaining({
         headers: expect.objectContaining({
           "x-goog-api-key": "test-server-key",
