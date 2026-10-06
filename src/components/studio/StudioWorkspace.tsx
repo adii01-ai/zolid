@@ -139,6 +139,21 @@ export default function StudioWorkspace({
 }: StudioWorkspaceProps) {
   const router = useRouter();
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantLauncherPosition, setAssistantLauncherPosition] = useState({
+    left: 16,
+    bottom: 16,
+  });
+  const assistantDrag = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startLeft: number;
+    startBottom: number;
+    width: number;
+    height: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressAssistantClick = useRef(false);
   const [activeTool, setActiveTool] = useState<StudioTool>("depth");
   const [showThreePreview, setShowThreePreview] = useState(false);
   const [showOriginalPreview, setShowOriginalPreview] = useState(false);
@@ -195,6 +210,60 @@ export default function StudioWorkspace({
     allowanceConfigured &&
     purchasedCredits !== null &&
     purchasedCredits >= CREDIT_COSTS.backgroundPng;
+
+  function handleAssistantPointerDown(
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) {
+    if (event.button !== 0) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    assistantDrag.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLeft: bounds.left,
+      startBottom: window.innerHeight - bounds.bottom,
+      width: bounds.width,
+      height: bounds.height,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleAssistantPointerMove(
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) {
+    const drag = assistantDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 4) return;
+    drag.moved = true;
+
+    const maxLeft = Math.max(8, window.innerWidth - drag.width - 8);
+    const maxBottom = Math.max(8, window.innerHeight - drag.height - 8);
+    setAssistantLauncherPosition({
+      left: Math.min(maxLeft, Math.max(8, drag.startLeft + deltaX)),
+      bottom: Math.min(maxBottom, Math.max(8, drag.startBottom - deltaY)),
+    });
+  }
+
+  function handleAssistantPointerUp(
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) {
+    const drag = assistantDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    suppressAssistantClick.current = drag.moved;
+    assistantDrag.current = null;
+  }
+
+  function handleAssistantClick() {
+    if (suppressAssistantClick.current) {
+      suppressAssistantClick.current = false;
+      return;
+    }
+    setAssistantOpen((open) => !open);
+  }
 
   useEffect(
     () => () => {
@@ -744,8 +813,15 @@ export default function StudioWorkspace({
         type="button"
         aria-expanded={assistantOpen}
         aria-controls="studio-assistant-panel"
-        onClick={() => setAssistantOpen((open) => !open)}
-        className="fixed bottom-4 left-4 z-40 rounded-full border border-[#4A4030] bg-[#17191F] px-3 py-2 text-[11px] font-semibold text-[#FFB547] shadow-lg hover:bg-[#242833] focus-visible:outline-2 focus-visible:outline-[#FFB547] lg:hidden"
+        aria-label="AI chat launcher. Drag to move, click to open."
+        title="Drag to move, click to open"
+        onPointerDown={handleAssistantPointerDown}
+        onPointerMove={handleAssistantPointerMove}
+        onPointerUp={handleAssistantPointerUp}
+        onPointerCancel={handleAssistantPointerUp}
+        onClick={handleAssistantClick}
+        style={assistantLauncherPosition}
+        className="fixed z-40 touch-none select-none cursor-grab rounded-full border border-[#4A4030] bg-[#17191F] px-3 py-2 text-[11px] font-semibold text-[#FFB547] shadow-lg hover:bg-[#242833] active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-[#FFB547] lg:hidden"
       >
         AI chat
       </button>

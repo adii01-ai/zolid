@@ -41,7 +41,7 @@ export default function AuthForm({
       : null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSendingLoginLink, setIsSendingLoginLink] = useState(false);
+  const [isSigningInWithGoogle, setIsSigningInWithGoogle] = useState(false);
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
   const [confirmationExpired, setConfirmationExpired] = useState(
     callbackError && !callbackRecoveryError,
@@ -97,38 +97,32 @@ export default function AuthForm({
       : `We couldn't ${action}. Check Supabase Authentication logs and SMTP delivery logs.`;
   }
 
-  async function sendLoginLink() {
-    const emailValidation = loginSchema.shape.email.safeParse(email.trim());
-    if (!emailValidation.success) {
-      setFieldErrors({ email: "Enter a valid email address first." });
-      return;
-    }
+  async function signInWithGoogle() {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl) {
-      setFeedback({ type: "error", message: "Sign-in links are temporarily unavailable." });
+      setFeedback({ type: "error", message: "Google sign-in is temporarily unavailable." });
       return;
     }
 
-    setIsSendingLoginLink(true);
+    setIsSigningInWithGoogle(true);
     setFeedback(null);
     try {
-      const callbackUrl = new URL("/auth/confirm", appUrl);
+      const callbackUrl = new URL("/auth/callback", appUrl);
       callbackUrl.searchParams.set("next", destination);
-      callbackUrl.searchParams.set("flow", "login");
-      const { error } = await createSupabaseBrowserClient().auth.signInWithOtp({
-        email: emailValidation.data,
+      const { error } = await createSupabaseBrowserClient().auth.signInWithOAuth({
+        provider: "google",
         options: {
-          shouldCreateUser: false,
-          emailRedirectTo: callbackUrl.toString(),
+          redirectTo: callbackUrl.toString(),
         },
       });
-      setFeedback(error
-        ? { type: "error", message: getEmailDeliveryError(error, "send a sign-in link") }
-        : { type: "success", message: "If this email has an account, a sign-in link is on its way. Check your inbox and spam folder." });
+      if (error) throw error;
     } catch (error) {
-      setFeedback({ type: "error", message: getEmailDeliveryError(error, "send a sign-in link") });
+      if (process.env.NODE_ENV === "development") {
+        console.error("[ZOLID] Google sign-in failed", error);
+      }
+      setFeedback({ type: "error", message: "We couldn't start Google sign-in. Please try again." });
     } finally {
-      setIsSendingLoginLink(false);
+      setIsSigningInWithGoogle(false);
     }
   }
 
@@ -393,7 +387,7 @@ export default function AuthForm({
           </p>
         )}
 
-        <button type="submit" disabled={isSubmitting} className="auth-submit">
+        <button type="submit" disabled={isSubmitting || isSigningInWithGoogle} className="auth-submit">
           {isSubmitting
             ? recoveryMode ? "Sending reset link..." : isLogin ? "Signing in..." : "Creating account..."
             : recoveryMode ? "Send reset link" : isLogin ? "Sign in" : "Create account"}
@@ -401,14 +395,23 @@ export default function AuthForm({
       </form>
 
       {isLogin && !recoveryMode && (
-        <button
-          type="button"
-          className="auth-secondary-submit"
-          disabled={isSendingLoginLink || isSubmitting}
-          onClick={() => void sendLoginLink()}
-        >
-          {isSendingLoginLink ? "Sending sign-in link..." : "Email me a sign-in link"}
-        </button>
+        <>
+          <div className="auth-provider-divider" aria-hidden="true"><span>or</span></div>
+          <button
+            type="button"
+            className="auth-google-submit"
+            disabled={isSigningInWithGoogle || isSubmitting}
+            onClick={() => void signInWithGoogle()}
+          >
+            <svg aria-hidden="true" viewBox="0 0 48 48" className="auth-google-mark">
+              <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z" />
+              <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
+              <path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z" />
+              <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8A19.3 19.3 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
+            </svg>
+            <span>{isSigningInWithGoogle ? "Connecting to Google..." : "Continue with Google"}</span>
+          </button>
+        </>
       )}
 
       {recoveryMode ? (
