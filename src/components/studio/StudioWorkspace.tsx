@@ -750,26 +750,7 @@ export default function StudioWorkspace({
         AI chat
       </button>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:ml-0">
-        <div>
-          <div aria-label="Creation progress" className="mb-2 flex items-center gap-2 text-[10px]">
-            <span className="flex items-center gap-1.5 font-semibold text-[#FFB547]"><span className="grid size-5 place-items-center rounded-full border border-[#FFB547]">1</span>Source</span>
-            <span aria-hidden="true" className="text-[#555B66]">›</span>
-            <span className={`flex items-center gap-1.5 ${depthMap ? "text-[#FFB547]" : "text-[#68707C]"}`}><span className="grid size-5 place-items-center rounded-full border border-current">2</span>Depth</span>
-            <span aria-hidden="true" className="text-[#555B66]">›</span>
-            <span className="flex items-center gap-1.5 text-[#68707C]"><span className="grid size-5 place-items-center rounded-full border border-current">3</span>Preview</span>
-            <span aria-hidden="true" className="text-[#555B66]">›</span>
-            <span className="flex items-center gap-1.5 text-[#68707C]"><span className="grid size-5 place-items-center rounded-full border border-current">4</span>Export</span>
-          </div>
-          <h2 className="text-xl font-semibold text-[#F3EDE2]">
-            {activeTool === "depth" ? "Create depth relief" : "Remove the background"}
-          </h2>
-          <p className="mt-1 text-xs text-[#9D9484]">
-            {activeTool === "depth"
-              ? "Turn a single image into a depth-based 3D asset."
-              : "Cut out your subject in one click. Processing happens in your browser."}
-          </p>
-        </div>
+      <div className="mb-3 flex justify-end">
         <div
           role="tablist"
           aria-label="Image tools"
