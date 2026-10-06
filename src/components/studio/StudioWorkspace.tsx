@@ -3,6 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "@/components/upload/Dropzone";
 import type { DepthMap } from "@/types/depth";
@@ -113,6 +114,7 @@ export default function StudioWorkspace({
   allowanceConfigured: initialAllowanceConfigured,
   recentGenerations,
 }: StudioWorkspaceProps) {
+  const router = useRouter();
   const [activeTool, setActiveTool] = useState<StudioTool>("depth");
   const [showThreePreview, setShowThreePreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -240,6 +242,7 @@ export default function StudioWorkspace({
         throw new Error("The export could not be charged. Please try again.");
       }
       setPurchasedCredits(typeof remainingCredits === "number" ? remainingCredits : Math.max(0, (purchasedCredits ?? 0) - CREDIT_COSTS.backgroundPng));
+      router.refresh();
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = objectUrl;
@@ -495,6 +498,7 @@ export default function StudioWorkspace({
         );
       }
       setPurchasedCredits(result.purchasedCredits ?? purchasedCredits);
+      router.refresh();
       setGenerationStage("Depth relief ready");
       setReservationId(null);
       rememberResult("Depth relief", previewDataUrl);
