@@ -139,6 +139,7 @@ export default function StudioWorkspace({
   const router = useRouter();
   const [activeTool, setActiveTool] = useState<StudioTool>("depth");
   const [showThreePreview, setShowThreePreview] = useState(false);
+  const [showOriginalPreview, setShowOriginalPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileRequest, setFileRequest] = useState<{
     id: number;
@@ -658,14 +659,93 @@ export default function StudioWorkspace({
 
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <aside
+        aria-label="Studio navigation"
+        className="fixed inset-y-16 left-0 z-30 hidden w-[216px] flex-col border-r border-[#292D35] bg-[#090B0F] px-3 py-4 lg:flex"
+      >
+        <nav aria-label="Studio tools" className="grid gap-1">
+          <Link
+            href="/studio"
+            aria-current="page"
+            className="flex items-center gap-3 rounded-md bg-[#1B1E25] px-3 py-2.5 text-xs font-semibold text-[#FFB547]"
+          >
+            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#FFB547]/50 text-[10px]">C</span>
+            Create
+          </Link>
+          <Link href="/gallery" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs text-[#A9AFBA] hover:bg-[#15181E] hover:text-white">
+            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[10px]">G</span>
+            Gallery
+          </Link>
+          <Link href="/billing" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs text-[#A9AFBA] hover:bg-[#15181E] hover:text-white">
+            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[10px]">$</span>
+            Billing
+          </Link>
+        </nav>
+
+        <div className="mt-5 border-t border-[#252932] pt-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[11px] font-semibold text-[#C7CBD3]">Recent projects</h2>
+            <Link href="/gallery" className="text-[10px] text-[#8C929D] hover:text-[#FFB547]">View all</Link>
+          </div>
+          <ul className="grid gap-1.5">
+            {(recentGenerations ?? []).slice(0, 5).map((generation) => (
+              <li key={generation.id}>
+                <Link href="/gallery" className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-2 hover:bg-[#15181E]">
+                  {generation.previewDataUrl ? (
+                    <Image src={generation.previewDataUrl} alt="" width={34} height={34} unoptimized className="size-[34px] shrink-0 rounded object-cover" />
+                  ) : (
+                    <span aria-hidden="true" className="size-[34px] shrink-0 rounded bg-[#242833]" />
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-[10px] font-medium text-[#C7CBD3]">Depth relief</span>
+                    <time className="mt-0.5 block text-[9px] text-[#737A86]">
+                      {generation.completedAt ? new Date(generation.completedAt).toLocaleDateString("en", { month: "short", day: "numeric" }) : "Saved"}
+                    </time>
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {sessionResults.slice(0, Math.max(0, 5 - (recentGenerations?.length ?? 0))).map((result) => (
+              <li key={result.id}>
+                <Link href="/gallery" className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-2 hover:bg-[#15181E]">
+                  <Image src={result.thumbnail} alt="" width={34} height={34} unoptimized className="size-[34px] shrink-0 rounded object-cover" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[10px] font-medium text-[#C7CBD3]">{result.label}</span>
+                    <time className="mt-0.5 block text-[9px] text-[#737A86]">{result.time}</time>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {(recentGenerations?.length ?? 0) === 0 && sessionResults.length === 0 && (
+            <p className="px-1.5 py-2 text-[10px] leading-4 text-[#737A86]">Your recent creations will appear here.</p>
+          )}
+        </div>
+
+        <div className="mt-auto rounded-md border border-[#34302A] bg-[#111318] p-3">
+          <p className="text-[11px] font-semibold text-[#E4E6EA]">Need more credits?</p>
+          <p className="mt-1 text-[10px] leading-4 text-[#9298A2]">Pick up a one-time credit pack.</p>
+          <Link href="/billing" className="mt-2 inline-flex w-full justify-center rounded bg-[#FFB547] px-2 py-2 text-[10px] font-semibold text-[#15130F] hover:brightness-105">View plans</Link>
+        </div>
+      </aside>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:ml-0">
         <div>
-          <h2 className="text-2xl font-semibold text-[#F3EDE2]">
-            {activeTool === "depth" ? "Turn a photo into a relief" : "Remove the background"}
+          <div aria-label="Creation progress" className="mb-2 flex items-center gap-2 text-[10px]">
+            <span className="flex items-center gap-1.5 font-semibold text-[#FFB547]"><span className="grid size-5 place-items-center rounded-full border border-[#FFB547]">1</span>Source</span>
+            <span aria-hidden="true" className="text-[#555B66]">›</span>
+            <span className={`flex items-center gap-1.5 ${depthMap ? "text-[#FFB547]" : "text-[#68707C]"}`}><span className="grid size-5 place-items-center rounded-full border border-current">2</span>Depth</span>
+            <span aria-hidden="true" className="text-[#555B66]">›</span>
+            <span className="flex items-center gap-1.5 text-[#68707C]"><span className="grid size-5 place-items-center rounded-full border border-current">3</span>Preview</span>
+            <span aria-hidden="true" className="text-[#555B66]">›</span>
+            <span className="flex items-center gap-1.5 text-[#68707C]"><span className="grid size-5 place-items-center rounded-full border border-current">4</span>Export</span>
+          </div>
+          <h2 className="text-xl font-semibold text-[#F3EDE2]">
+            {activeTool === "depth" ? "Create depth relief" : "Remove the background"}
           </h2>
-          <p className="mt-1 text-sm text-[#9D9484]">
+          <p className="mt-1 text-xs text-[#9D9484]">
             {activeTool === "depth"
-              ? "Upload an image, shape its depth, then tilt the result."
+              ? "Turn a single image into a depth-based 3D asset."
               : "Cut out your subject in one click. Processing happens in your browser."}
           </p>
         </div>
@@ -696,23 +776,23 @@ export default function StudioWorkspace({
       </div>
       <section
         aria-label="3D model creation workspace"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-stretch"
+        className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start"
       >
-        <div className="order-1 rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4 sm:p-5 lg:col-start-1 lg:row-start-1">
+        <div className="order-1 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Step 1
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#828A96]">
+                Source image
               </p>
-              <h2 className="mt-2 text-lg font-semibold text-white">
-                Upload photo
+              <h2 className="mt-1 text-sm font-semibold text-[#E4E6EA]">
+                {selectedFile ? selectedFile.name : "Choose an image"}
               </h2>
-              <p className="mt-1 text-sm text-slate-400">
-                JPG, PNG, or WebP · up to 10 MB
+              <p className="mt-1 text-[10px] text-[#8B929D]">
+                {selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB` : "JPG, PNG, or WebP · up to 10 MB"}
               </p>
             </div>
             {selectedFile && (
-              <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-200">
+              <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[10px] font-medium text-emerald-200">
                 Image ready
               </span>
             )}
@@ -726,12 +806,12 @@ export default function StudioWorkspace({
           <button
             type="button"
             onClick={() => void handleTrySample()}
-            className="mt-3 rounded-[11px] border border-[#37321F] px-3 py-2 text-sm text-[#F3EDE2] transition-colors hover:bg-[#25211A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
+            className="mt-2 rounded-md border border-[#343944] px-3 py-2 text-[11px] text-[#D3D6DC] transition-colors hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
           >
             Try a sample
           </button>
           {selectedFile && (
-            <p className="mt-3 break-all text-xs text-slate-500">
+            <p className="mt-2 break-all text-[10px] text-[#828A96]">
               Selected: {selectedFile.name} ·{" "}
               {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
               {sourceImageData && ` · ${sourceImageData.width} × ${sourceImageData.height} px`}
@@ -741,76 +821,87 @@ export default function StudioWorkspace({
 
         <section
           aria-labelledby="preview-heading"
-          className="order-4 min-w-0 self-start rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4 sm:p-5 lg:order-2 lg:col-start-2 lg:row-start-1 lg:row-span-3"
+          className="order-2 min-w-0 self-start rounded-lg border border-[#292D35] bg-[#0D0F13] p-3 sm:p-4 lg:col-start-1 lg:row-start-1 lg:row-span-3"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                Preview
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#828A96]">
+                Preview stage
               </p>
               <h2
                 id="preview-heading"
-                className="mt-2 text-lg font-semibold text-white"
+                className="mt-1 text-sm font-semibold text-[#E4E6EA]"
               >
                 {activeTool === "depth" ? "3D preview" : "Result"}
               </h2>
             </div>
             {depthMap && (
-              <span className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-xs text-emerald-200">
+              <span className="rounded-md border border-emerald-400/30 px-2.5 py-1 text-[10px] text-emerald-200">
                 Relief ready
               </span>
             )}
           </div>
-          <div className="mt-4 grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
-            <div className="flex min-h-0 flex-col overflow-hidden rounded-[12px] border border-[#37321F] bg-[#15130F]">
-              <p className="border-b border-[#37321F] px-3 py-2 text-xs font-medium text-[#9D9484]">
-                Original
-              </p>
-              <div className="relative grid h-[320px] place-items-center overflow-hidden p-3 sm:h-[360px]">
-                {imageUrl ? (
+          <div className="mt-3 overflow-hidden rounded-md border border-[#292D35] bg-[#090B0F]">
+            <div className="flex min-h-10 items-center justify-between gap-2 border-b border-[#252932] px-2.5">
+              <div role="tablist" aria-label="Preview source" className="inline-flex rounded bg-[#15181E] p-0.5">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!showOriginalPreview}
+                  onClick={() => setShowOriginalPreview(false)}
+                  className={`rounded px-2.5 py-1 text-[10px] font-medium ${!showOriginalPreview ? "bg-[#252A33] text-[#E4E6EA]" : "text-[#8B929D] hover:text-white"}`}
+                >
+                  3D View
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={showOriginalPreview}
+                  onClick={() => setShowOriginalPreview(true)}
+                  className={`rounded px-2.5 py-1 text-[10px] font-medium ${showOriginalPreview ? "bg-[#252A33] text-[#E4E6EA]" : "text-[#8B929D] hover:text-white"}`}
+                >
+                  Original
+                </button>
+              </div>
+              {activeTool === "depth" && depthMap && !showOriginalPreview && (
+                <div role="tablist" aria-label="Relief render mode" className="flex items-center gap-0.5 rounded bg-[#15181E] p-0.5">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={!showThreePreview}
+                    onClick={() => setShowThreePreview(false)}
+                    className={`rounded px-2 py-1 text-[10px] ${!showThreePreview ? "bg-[#252A33] text-[#E4E6EA]" : "text-[#8B929D] hover:text-white"}`}
+                  >
+                    Tilt
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={showThreePreview}
+                    onClick={() => setShowThreePreview(true)}
+                    className={`rounded px-2 py-1 text-[10px] ${showThreePreview ? "bg-[#252A33] text-[#E4E6EA]" : "text-[#8B929D] hover:text-white"}`}
+                  >
+                    3D
+                  </button>
+                </div>
+              )}
+              {selectedFile && sourceImageData && (
+                <span className="hidden truncate text-[9px] text-[#747C88] sm:block">
+                  {sourceImageData.width} × {sourceImageData.height} · {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB
+                </span>
+              )}
+            </div>
+            <div className={`relative grid h-[320px] touch-none place-items-center overflow-hidden sm:h-[min(58vh,520px)] sm:min-h-[360px] ${activeTool === "background" && backgroundMode === "transparent" ? "bg-[linear-gradient(45deg,#171A20_25%,transparent_25%),linear-gradient(-45deg,#171A20_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#171A20_75%),linear-gradient(-45deg,transparent_75%,#171A20_75%)] bg-[length:24px_24px] bg-[position:0_0,0_12px,12px_-12px,-12px_0]" : "bg-[#090B0F] [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:40px_40px]"}`}>
+                {showOriginalPreview && imageUrl ? (
                   <Image
                     src={imageUrl}
-                    alt="Uploaded original"
+                    alt="Original uploaded image"
                     fill
                     unoptimized
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-contain p-3"
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-contain p-5"
                   />
-                ) : (
-                  <p className="text-sm text-[#9D9484]">Your photo will appear here</p>
-                )}
-              </div>
-            </div>
-            <div className="flex min-w-0 flex-col overflow-hidden rounded-[12px] border border-[#37321F] bg-[#15130F]">
-              <div className="flex items-center justify-between border-b border-[#37321F] px-3 py-2">
-                <p className="text-xs font-medium text-[#9D9484]">
-                  {activeTool === "depth" ? "3D preview" : "Result"}
-                </p>
-                {activeTool === "depth" && depthMap && (
-                  <div className="flex gap-1" role="tablist" aria-label="Relief preview mode">
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={!showThreePreview}
-                      onClick={() => setShowThreePreview(false)}
-                      className={`rounded-full px-2 py-1 text-xs ${!showThreePreview ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484]"}`}
-                    >
-                      Tilt frame
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={showThreePreview}
-                      onClick={() => setShowThreePreview(true)}
-                      className={`rounded-full px-2 py-1 text-xs ${showThreePreview ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484]"}`}
-                    >
-                      3D viewer
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className={`relative grid h-[320px] touch-none place-items-center overflow-hidden sm:h-[360px] ${activeTool === "background" && backgroundMode === "transparent" ? "bg-[linear-gradient(45deg,#25211A_25%,transparent_25%),linear-gradient(-45deg,#25211A_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#25211A_75%),linear-gradient(-45deg,transparent_75%,#25211A_75%)] bg-[length:18px_18px] bg-[position:0_0,0_9px,9px_-9px,-9px_0]" : "bg-[#15130F]"}`}>
-                {activeTool === "background" && backgroundResult ? (
+                ) : activeTool === "background" && backgroundResult ? (
                   <>
                     {sourceImageData && (
                       <canvas
@@ -831,7 +922,7 @@ export default function StudioWorkspace({
                       style={{ left: `${comparePosition}%` }}
                       aria-hidden="true"
                     />
-                    <div className="absolute inset-x-0 bottom-0 z-20 bg-[#15130F]/95 px-3 pb-2 pt-1">
+                    <div className="absolute inset-x-0 bottom-0 z-20 bg-[#090B0F]/90 px-3 pb-2 pt-1">
                       <input
                         type="range"
                         min="0"
@@ -861,16 +952,25 @@ export default function StudioWorkspace({
                       onPointerMove={addDepthTilt}
                       onPointerLeave={resetDepthTilt}
                       aria-label="Depth relief preview. Move the pointer to tilt."
-                      className="max-h-full max-w-full rounded-[12px] object-contain"
+                      className="max-h-full max-w-full object-contain"
                       style={{ touchAction: "none" }}
                     />
                   )
+                ) : imageUrl && activeTool === "depth" && !depthMap ? (
+                  <Image
+                    src={imageUrl}
+                    alt="Source image ready for depth generation"
+                    fill
+                    unoptimized
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-contain p-5 opacity-80"
+                  />
                 ) : (
-                  <p className="max-w-xs px-4 text-center text-sm text-[#9D9484]">
+                  <p className="max-w-xs px-4 text-center text-xs text-[#8B929D]">
                     {activeTool === "depth"
                       ? isGenerating
                         ? generationStage || "Generating depth relief..."
-                        : "Generate to unlock the 3D preview."
+                        : "Your 3D preview will appear here. Upload an image to begin."
                       : isRemovingBackground
                         ? "Removing background..."
                         : "Upload an image to begin."}
@@ -878,7 +978,6 @@ export default function StudioWorkspace({
                 )}
               </div>
             </div>
-          </div>
           {depthMap && activeTool === "depth" && (
             <div className="mt-4 flex flex-wrap gap-2 border-t border-[#37321F] pt-4">
               <button
@@ -900,13 +999,13 @@ export default function StudioWorkspace({
           )}
         </section>
 
-        <fieldset className="order-2 rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4 sm:p-5 lg:order-3 lg:col-start-1 lg:row-start-2">
-          <legend className="px-2 text-sm font-semibold text-[#F3EDE2]">
-            Step 2 · {activeTool === "depth" ? "Settings" : "Removal settings"}
+        <fieldset className="order-3 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-2">
+          <legend className="px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
+            {activeTool === "depth" ? "Depth settings" : "Removal settings"}
           </legend>
           {activeTool === "depth" ? (
-            <div className="space-y-5 rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4">
-              <label className="block text-sm text-[#F3EDE2]">
+            <div className="space-y-3 rounded-md border border-[#292D35] bg-[#15181E] p-3">
+              <label className="block text-[11px] text-[#D3D6DC]">
                 <span className="flex justify-between">
                   Relief strength <output>{reliefStrength}</output>
                 </span>
@@ -916,10 +1015,10 @@ export default function StudioWorkspace({
                   max="100"
                   value={reliefStrength}
                   onChange={(event) => setReliefStrength(Number(event.currentTarget.value))}
-                  className="mt-2 w-full accent-[#FFB547]"
+                  className="mt-1.5 w-full accent-[#FFB547]"
                 />
               </label>
-              <label className="block text-sm text-[#F3EDE2]">
+              <label className="block text-[11px] text-[#D3D6DC]">
                 <span className="flex justify-between">
                   Smoothing <output>{smoothing}</output>
                 </span>
@@ -929,10 +1028,10 @@ export default function StudioWorkspace({
                   max="12"
                   value={smoothing}
                   onChange={(event) => updateDepthSettings(Number(event.currentTarget.value), treatDarkAsNear)}
-                  className="mt-2 w-full accent-[#FFB547]"
+                  className="mt-1.5 w-full accent-[#FFB547]"
                 />
               </label>
-              <label className="flex items-center gap-2 text-sm text-[#F3EDE2]">
+              <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
                 <input
                   type="checkbox"
                   checked={treatDarkAsNear}
@@ -941,24 +1040,24 @@ export default function StudioWorkspace({
                 />
                 Treat dark areas as near
               </label>
-              <div className="border-t border-[#37321F] pt-4">
-                <p className="text-sm font-medium text-[#F3EDE2]">Depth Relief</p>
-                <p className="mt-2 text-xs text-[#9D9484]">
+              <div className="border-t border-[#292D35] pt-3">
+                <p className="text-[11px] font-semibold text-[#D3D6DC]">Credit use</p>
+                <p className="mt-1.5 text-[10px] text-[#8B929D]">
                   {allowanceConfigured
                     ? `${purchasedCredits ?? 0} credits available`
                     : "Generation balance unavailable"}
                 </p>
                 {purchasedCredits !== null && (
-                  <p className="mt-1 text-xs text-[#9D9484]">
+                  <p className="mt-1 text-[10px] text-[#8B929D]">
                       {CREDIT_COSTS.depthRelief} credits per depth relief
                   </p>
                 )}
-                <p className="mt-1 text-xs text-[#9D9484]">{CREDIT_COSTS.backgroundPng} credits per PNG export</p>
+                <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.backgroundPng} credits per PNG export</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-5 rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4">
-              <label className="block text-sm text-[#F3EDE2]">
+            <div className="space-y-3 rounded-md border border-[#292D35] bg-[#15181E] p-3">
+              <label className="block text-[11px] text-[#D3D6DC]">
                 <span className="flex justify-between">
                   Color tolerance <output>{colorTolerance}</output>
                 </span>
@@ -968,10 +1067,10 @@ export default function StudioWorkspace({
                   max="150"
                   value={colorTolerance}
                   onChange={(event) => setColorTolerance(Number(event.currentTarget.value))}
-                  className="mt-2 w-full accent-[#FFB547]"
+                  className="mt-1.5 w-full accent-[#FFB547]"
                 />
               </label>
-              <label className="block text-sm text-[#F3EDE2]">
+              <label className="block text-[11px] text-[#D3D6DC]">
                 <span className="flex justify-between">
                   Edge softness <output>{edgeSoftness}</output>
                 </span>
@@ -981,16 +1080,16 @@ export default function StudioWorkspace({
                   max="10"
                   value={edgeSoftness}
                   onChange={(event) => setEdgeSoftness(Number(event.currentTarget.value))}
-                  className="mt-2 w-full accent-[#FFB547]"
+                  className="mt-1.5 w-full accent-[#FFB547]"
                 />
               </label>
               <fieldset className="flex flex-wrap items-center gap-4">
-                <legend className="mb-2 text-sm text-[#F3EDE2]">Background</legend>
-                <label className="flex items-center gap-2 text-sm text-[#F3EDE2]">
+                  <legend className="mb-2 text-[11px] text-[#D3D6DC]">Background</legend>
+                <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
                   <input type="radio" name="background-choice" checked={backgroundMode === "transparent"} onChange={() => setBackgroundMode("transparent")} />
                   Transparent
                 </label>
-                <label className="flex items-center gap-2 text-sm text-[#F3EDE2]">
+                <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
                   <input type="radio" name="background-choice" checked={backgroundMode === "solid"} onChange={() => setBackgroundMode("solid")} />
                   Solid color
                 </label>
@@ -1002,10 +1101,10 @@ export default function StudioWorkspace({
           )}
         </fieldset>
 
-        <div className="order-3 rounded-[16px] border border-[#37321F] bg-[#1D1A15] p-4 sm:p-5 lg:order-4 lg:col-start-1 lg:row-start-3">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <p className="text-sm font-semibold text-[#F3EDE2]">
-              Step 3 · {activeTool === "depth" ? "Generate" : "Export"}
+        <div className="order-4 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-3">
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
+              Output
             </p>
             <button
               type="button"
@@ -1021,7 +1120,7 @@ export default function StudioWorkspace({
                   : isDownloading || !canExportBackground)
               }
               aria-describedby="generation-state"
-              className="w-full rounded-[11px] bg-[#FFB547] px-5 py-3 font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-72"
+              className="w-full rounded-md bg-[#FFB547] px-4 py-3 text-xs font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {activeTool === "depth"
                 ? "Generate depth relief"
@@ -1032,7 +1131,7 @@ export default function StudioWorkspace({
             <p
               id="generation-state"
               role="status"
-              className="text-sm text-slate-400"
+              className="text-[10px] leading-4 text-[#8B929D]"
             >
               {activeTool === "depth"
                 ? disabledReason
@@ -1052,14 +1151,14 @@ export default function StudioWorkspace({
             ) && (
               <Link
                 href="/billing"
-                className="inline-flex rounded-md bg-[#FFB547] px-4 py-2.5 text-sm font-semibold text-[#15130F] hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
+                className="inline-flex justify-center rounded-md border border-[#3B414B] px-3 py-2 text-[10px] font-semibold text-[#E4E6EA] hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
               >
                 Buy credits
               </Link>
             )}
             {generationError && (
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <p role="alert" className="text-sm text-rose-300">
+                <p role="alert" className="text-[10px] text-rose-300">
                   {generationError}
                 </p>
               </div>
@@ -1068,27 +1167,27 @@ export default function StudioWorkspace({
         </div>
       </section>
 
-      <section aria-labelledby="session-results-heading" className="mt-9">
-        <div className="mb-3 flex items-end justify-between border-b border-[#37321F] pb-3">
+      <section aria-labelledby="session-results-heading" className="mt-5 lg:mr-[292px]">
+        <div className="mb-2 flex items-end justify-between border-b border-[#292D35] pb-2">
           <div>
-            <h2 id="session-results-heading" className="text-lg font-semibold text-[#F3EDE2]">
-              Recent results
+            <h2 id="session-results-heading" className="text-sm font-semibold text-[#E4E6EA]">
+              Recent creations
             </h2>
-            <p className="mt-1 text-sm text-[#9D9484]">Results from this session only</p>
+            <p className="mt-0.5 text-[10px] text-[#828A96]">Continue where you left off.</p>
           </div>
         </div>
         {sessionResults.length === 0 ? (
-          <p className="py-5 text-sm text-[#9D9484]">
-            Results you generate or download appear here during this session.
+          <p className="py-3 text-[10px] text-[#828A96]">
+            Your latest creations will appear here.
           </p>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
             {sessionResults.map((result) => (
-              <li key={result.id} className="flex min-w-0 items-center gap-2 rounded-[12px] border border-[#37321F] bg-[#1D1A15] p-2">
-                <Image src={result.thumbnail} alt="" width={44} height={44} unoptimized className="size-11 shrink-0 rounded-md object-cover" />
-                <span className="min-w-0">
-                  <span className="block truncate text-xs font-medium text-[#F3EDE2]">{result.label}</span>
-                  <time className="mt-1 block text-[11px] text-[#9D9484]">{result.time}</time>
+              <li key={result.id} className="min-w-0 overflow-hidden rounded-md border border-[#292D35] bg-[#111318]">
+                <Image src={result.thumbnail} alt="" width={240} height={140} unoptimized className="aspect-[16/9] w-full object-cover" />
+                <span className="block min-w-0 px-2 py-1.5">
+                  <span className="block truncate text-[10px] font-medium text-[#D3D6DC]">{result.label}</span>
+                  <time className="mt-0.5 block text-[9px] text-[#747C88]">{result.time}</time>
                 </span>
               </li>
             ))}
@@ -1096,45 +1195,45 @@ export default function StudioWorkspace({
         )}
       </section>
 
-      <section aria-labelledby="recent-models-heading" className="mt-9">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <section aria-labelledby="recent-models-heading" className="mt-5 lg:mr-[292px]">
+        <div className="flex items-center justify-between gap-4 border-b border-[#292D35] pb-2">
           <div>
             <h2
               id="recent-models-heading"
-              className="text-lg font-semibold text-white"
+              className="text-sm font-semibold text-[#E4E6EA]"
             >
-              Recent depth reliefs
+              Saved depth reliefs
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Completed reliefs with saved viewer previews
+            <p className="mt-0.5 text-[10px] text-[#828A96]">
+              Completed 3D assets from your account.
             </p>
           </div>
           <Link
             href="/gallery"
-            className="text-sm font-medium text-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
+            className="text-[10px] font-medium text-[#FFB547] hover:text-[#FFD18A] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547]"
           >
             View all
           </Link>
         </div>
         {recentGenerations === null ? (
-          <p role="status" className="py-6 text-sm text-slate-400">
+          <p role="status" className="py-4 text-xs text-[#828A96]">
             Depth relief history is unavailable right now.
           </p>
         ) : recentGenerations.length === 0 ? (
-          <div className="mt-5 rounded-lg border border-dashed border-slate-800 px-5 py-8 text-center">
-            <p className="font-medium text-slate-200">No depth reliefs yet</p>
-            <p className="mt-2 text-sm text-slate-500">
+          <div className="mt-3 rounded-md border border-dashed border-[#292D35] px-5 py-5 text-center">
+            <p className="text-xs font-medium text-[#D3D6DC]">No depth reliefs yet</p>
+            <p className="mt-1 text-[10px] text-[#828A96]">
               Successfully generated relief previews will appear here.
             </p>
           </div>
         ) : (
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
             {recentGenerations.map((generation) => (
               <li
                 key={generation.id}
-                className="min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-[#0b1120]"
+                className="min-w-0 overflow-hidden rounded-md border border-[#292D35] bg-[#111318]"
               >
-                <div className="relative aspect-[16/9] border-b border-slate-800 bg-[#080d18]">
+                <div className="relative aspect-[16/9] border-b border-[#292D35] bg-[#0B0D11]">
                   {generation.previewDataUrl ? (
                     <Image
                       src={generation.previewDataUrl}
@@ -1145,22 +1244,22 @@ export default function StudioWorkspace({
                       className="object-contain"
                     />
                   ) : (
-                    <div className="grid size-full place-items-center text-xs text-slate-500">
+                    <div className="grid size-full place-items-center text-[10px] text-[#747C88]">
                       Preview unavailable
                     </div>
                   )}
                 </div>
-                <div className="p-3">
-                  <p className="truncate text-sm font-medium text-slate-200">
+                <div className="p-2">
+                  <p className="truncate text-[10px] font-medium text-[#D3D6DC]">
                     Depth relief {generation.id.slice(0, 8)}
                   </p>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-emerald-400/30 px-2 py-0.5 text-xs text-emerald-200">
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span className="rounded-full border border-emerald-400/30 px-2 py-0.5 text-[9px] text-emerald-200">
                       {generation.source === "free" ? "Free" : "Credit"}
                     </span>
                     <time
                       dateTime={generation.completedAt}
-                      className="text-xs text-slate-500"
+                      className="text-[9px] text-[#747C88]"
                     >
                       {generation.completedAt.slice(0, 10)}
                     </time>

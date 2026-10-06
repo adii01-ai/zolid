@@ -51,20 +51,20 @@ export default async function StudioPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-6 lg:pl-[232px]">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-cyan-300">Zolid Studio</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <p className="text-xs font-medium text-[#FFB547]">Zolid Studio</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#F3EDE2] sm:text-3xl">
             Create depth relief
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-[#9D9484] sm:text-sm">
             Turn your image into an interactive front-facing depth relief.
           </p>
         </div>
         <Link
           href="/gallery"
-          className="text-sm font-medium text-cyan-200 underline decoration-cyan-200/40 underline-offset-4 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
+          className="text-xs font-medium text-[#FFB547] underline decoration-[#FFB547]/40 underline-offset-4 hover:text-[#FFD18A] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547]"
         >
           View gallery
         </Link>

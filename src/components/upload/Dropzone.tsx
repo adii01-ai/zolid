@@ -98,20 +98,20 @@ export default function Dropzone({
       className={`w-full ${compact ? "mt-4 max-w-none" : "mt-10 max-w-2xl"}`}
     >
       {selectedFile && previewUrl ? (
-        <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900">
-          <div className="flex items-center justify-between gap-4 border-b border-neutral-800 px-4 py-3">
+        <div className={`overflow-hidden rounded-md border ${compact ? "border-[#292D35] bg-[#15181E]" : "border-neutral-800 bg-neutral-900"}`}>
+          <div className={`flex items-center justify-between gap-4 border-b px-3 py-2 ${compact ? "border-[#292D35]" : "border-neutral-800"}`}>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-neutral-100">
+              <p className={`truncate font-medium text-neutral-100 ${compact ? "text-[10px]" : "text-sm"}`}>
                 {selectedFile.name}
               </p>
-              <p className="text-xs text-neutral-400">
+              <p className={`text-neutral-400 ${compact ? "text-[9px]" : "text-xs"}`}>
                 {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
               </p>
             </div>
             <button
               type="button"
               onClick={clearSelection}
-              className="shrink-0 rounded-md border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+              className={`shrink-0 rounded-md border px-2 py-1.5 text-[10px] text-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 ${compact ? "border-[#343944] hover:bg-[#242833] focus-visible:outline-[#FFB547]" : "border-neutral-700 py-2 text-sm hover:bg-neutral-800 focus-visible:outline-cyan-300"}`}
             >
               Remove image
             </button>
@@ -143,8 +143,8 @@ export default function Dropzone({
           onDrop={handleDrop}
           className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed text-center transition-colors focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-cyan-300 ${compact ? "min-h-36 gap-1 px-4 py-6" : "min-h-56 px-6 py-10"} ${
             isDragging
-              ? "border-cyan-300 bg-cyan-300/10"
-              : "border-neutral-700 bg-neutral-900/70 hover:border-neutral-500"
+              ? compact ? "border-[#FFB547] bg-[#FFB547]/10" : "border-cyan-300 bg-cyan-300/10"
+              : compact ? "border-[#343944] bg-[#15181E] hover:border-[#737C89]" : "border-neutral-700 bg-neutral-900/70 hover:border-neutral-500"
           }`}
         >
           <input
@@ -158,31 +158,31 @@ export default function Dropzone({
               if (file) void selectFile(file);
             }}
           />
-          <span className="text-base font-medium text-neutral-100">
+          <span className={`font-medium text-neutral-100 ${compact ? "text-[11px]" : "text-base"}`}>
             {isValidating
               ? "Checking image..."
               : isDragging
                 ? "Drop image to check it"
                 : "Drop an image here or browse"}
           </span>
-          <span className="mt-2 text-sm text-neutral-400">
+          <span className={`mt-2 text-neutral-400 ${compact ? "text-[9px]" : "text-sm"}`}>
             JPG, PNG, or WebP · up to 10 MB · minimum 256 × 256 px
           </span>
         </label>
       )}
       {examples.length > 0 && (
-        <div className="mt-5 border-t border-neutral-800 pt-4">
+        <div className={`border-t pt-3 ${compact ? "mt-3 border-[#292D35]" : "mt-5 border-neutral-800"}`}>
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-neutral-100">
+              <h3 className={`font-semibold text-neutral-100 ${compact ? "text-[10px]" : "text-sm"}`}>
                 Try an example
               </h3>
-              <p className="mt-1 text-xs leading-5 text-neutral-400">
+              <p className={`mt-1 leading-4 text-neutral-400 ${compact ? "text-[9px]" : "text-xs leading-5"}`}>
                 Use one image to create a front-facing depth relief.
               </p>
             </div>
             {loadingExample && (
-              <span role="status" className="shrink-0 text-xs text-cyan-200">
+              <span role="status" className={`shrink-0 ${compact ? "text-[9px] text-[#FFB547]" : "text-xs text-cyan-200"}`}>
                 Loading {loadingExample}...
               </span>
             )}
@@ -195,9 +195,9 @@ export default function Dropzone({
                 onClick={() => void selectExample(example)}
                 disabled={loadingExample !== null}
                 aria-label={`Use ${example.label} example image`}
-                className="group overflow-hidden rounded-md border border-neutral-800 bg-neutral-900 text-left transition hover:border-cyan-300/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60"
+                className={`group overflow-hidden rounded-md border text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-wait disabled:opacity-60 ${compact ? "border-[#292D35] bg-[#111318] hover:border-[#FFB547]/60 focus-visible:outline-[#FFB547]" : "border-neutral-800 bg-neutral-900 hover:border-cyan-300/60 focus-visible:outline-cyan-300"}`}
               >
-                <span className="relative block aspect-[4/3] overflow-hidden bg-neutral-800">
+                <span className={`relative block aspect-[4/3] overflow-hidden ${compact ? "bg-[#242833]" : "bg-neutral-800"}`}>
                   <Image
                     src={example.src}
                     alt=""
@@ -207,7 +207,7 @@ export default function Dropzone({
                     className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                 </span>
-                <span className="block truncate px-2.5 py-2 text-xs font-medium text-neutral-200">
+                <span className={`block truncate px-2 py-1.5 font-medium text-neutral-200 ${compact ? "text-[9px]" : "px-2.5 py-2 text-xs"}`}>
                   {example.label}
                 </span>
               </button>
