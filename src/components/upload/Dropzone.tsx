@@ -95,7 +95,7 @@ export default function Dropzone({
   return (
     <section
       aria-label="Image upload"
-      className={`w-full ${compact ? "mt-4 max-w-none" : "mt-10 max-w-2xl"}`}
+      className={`w-full ${compact ? "mt-2 max-w-none" : "mt-10 max-w-2xl"}`}
     >
       {selectedFile && previewUrl ? (
         <div className={`overflow-hidden rounded-md border ${compact ? "border-[#292D35] bg-[#15181E]" : "border-neutral-800 bg-neutral-900"}`}>
@@ -141,7 +141,7 @@ export default function Dropzone({
             if (event.currentTarget === event.target) setIsDragging(false);
           }}
           onDrop={handleDrop}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed text-center transition-colors focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-cyan-300 ${compact ? "min-h-36 gap-1 px-4 py-6" : "min-h-56 px-6 py-10"} ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed text-center transition-colors focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-cyan-300 ${compact ? "min-h-[60px] gap-1 px-3 py-2" : "min-h-56 px-6 py-10"} ${
             isDragging
               ? compact ? "border-[#FFB547] bg-[#FFB547]/10" : "border-cyan-300 bg-cyan-300/10"
               : compact ? "border-[#343944] bg-[#15181E] hover:border-[#737C89]" : "border-neutral-700 bg-neutral-900/70 hover:border-neutral-500"
@@ -171,14 +171,14 @@ export default function Dropzone({
         </label>
       )}
       {examples.length > 0 && (
-        <div className={`border-t pt-3 ${compact ? "mt-3 border-[#292D35]" : "mt-5 border-neutral-800"}`}>
-          <div className="mb-3 flex items-end justify-between gap-3">
+        <div className={`border-t pt-3 ${compact ? "mt-2 border-[#292D35]" : "mt-5 border-neutral-800"}`}>
+          <div className={`flex items-end justify-between gap-3 ${compact ? "mb-1" : "mb-3"}`}>
             <div>
               <h3 className={`font-semibold text-neutral-100 ${compact ? "text-[10px]" : "text-sm"}`}>
                 Try an example
               </h3>
-              <p className={`mt-1 leading-4 text-neutral-400 ${compact ? "text-[9px]" : "text-xs leading-5"}`}>
-                Use one image to create a front-facing depth relief.
+              <p className={`mt-1 leading-4 text-neutral-400 ${compact ? "text-right text-[9px]" : "text-xs leading-5"}`}>
+                {compact ? "Front-facing objects work best" : "Use one image to create a front-facing depth relief."}
               </p>
             </div>
             {loadingExample && (

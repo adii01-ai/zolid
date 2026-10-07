@@ -747,37 +747,35 @@ export default function StudioWorkspace({
         AI chat
       </button>
 
-      <div className="mb-3 flex justify-end">
-        <div
-          role="tablist"
-          aria-label="Image tools"
-          className="inline-flex rounded-full border border-[#37321F] bg-[#1D1A15] p-1"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTool === "depth"}
-            onClick={() => setActiveTool("depth")}
-            className={`rounded-full px-4 py-2 text-sm transition-colors ${activeTool === "depth" ? "bg-[#FFB547] font-semibold text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
-          >
-            Depth relief
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTool === "background"}
-            onClick={() => setActiveTool("background")}
-            className={`rounded-full px-4 py-2 text-sm transition-colors ${activeTool === "background" ? "bg-[#FFB547] font-semibold text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
-          >
-            Remove background
-          </button>
-        </div>
-      </div>
       <section
         aria-label="3D model creation workspace"
-        className="grid grid-cols-1 gap-3 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start"
+        className="grid grid-cols-1 gap-3 lg:grid-cols-[256px_minmax(0,1fr)] lg:items-start"
       >
         <aside aria-label="Image and generation controls" className="order-1 min-w-0 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-1 lg:row-start-1">
+          <div
+            role="tablist"
+            aria-label="Image tools"
+            className="mb-3 grid grid-cols-2 rounded-md border border-[#37321F] bg-[#15130F] p-1"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTool === "depth"}
+              onClick={() => setActiveTool("depth")}
+              className={`rounded px-2 py-2 text-[10px] font-semibold transition-colors ${activeTool === "depth" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+            >
+              Depth relief
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTool === "background"}
+              onClick={() => setActiveTool("background")}
+              className={`rounded px-2 py-2 text-[10px] font-semibold transition-colors ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+            >
+              Remove background
+            </button>
+          </div>
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#828A96]">
