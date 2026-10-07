@@ -141,7 +141,7 @@ export default function Dropzone({
             if (event.currentTarget === event.target) setIsDragging(false);
           }}
           onDrop={handleDrop}
-          className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed text-center transition-colors focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-cyan-300 ${compact ? "min-h-[60px] gap-1 px-3 py-2" : "min-h-56 px-6 py-10"} ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed text-center transition-colors focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-cyan-300 ${compact ? "min-h-[60px] gap-0 px-2 py-1" : "min-h-56 px-6 py-10"} ${
             isDragging
               ? compact ? "border-[#FFB547] bg-[#FFB547]/10" : "border-cyan-300 bg-cyan-300/10"
               : compact ? "border-[#343944] bg-[#15181E] hover:border-[#737C89]" : "border-neutral-700 bg-neutral-900/70 hover:border-neutral-500"
@@ -165,13 +165,13 @@ export default function Dropzone({
                 ? "Drop image to check it"
                 : "Drop an image here or browse"}
           </span>
-          <span className={`mt-2 text-neutral-400 ${compact ? "text-[9px]" : "text-sm"}`}>
+          <span className={`${compact ? "mt-1 text-[9px]" : "mt-2 text-sm"} text-neutral-400`}>
             JPG, PNG, or WebP · up to 10 MB · minimum 256 × 256 px
           </span>
         </label>
       )}
       {examples.length > 0 && (
-        <div className={`border-t pt-3 ${compact ? "mt-2 border-[#292D35]" : "mt-5 border-neutral-800"}`}>
+        <div className={`border-t ${compact ? "mt-2 border-[#292D35] pt-2" : "mt-5 border-neutral-800 pt-3"}`}>
           <div className={`flex items-end justify-between gap-3 ${compact ? "mb-1" : "mb-3"}`}>
             <div>
               <h3 className={`font-semibold text-neutral-100 ${compact ? "text-[10px]" : "text-sm"}`}>

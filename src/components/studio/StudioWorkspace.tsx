@@ -755,14 +755,14 @@ export default function StudioWorkspace({
           <div
             role="tablist"
             aria-label="Image tools"
-            className="mb-3 grid grid-cols-2 rounded-md border border-[#37321F] bg-[#15130F] p-1"
+            className="mb-2 grid grid-cols-2 rounded-md border border-[#37321F] bg-[#15130F] p-1"
           >
             <button
               type="button"
               role="tab"
               aria-selected={activeTool === "depth"}
               onClick={() => setActiveTool("depth")}
-              className={`rounded px-2 py-2 text-[10px] font-semibold transition-colors ${activeTool === "depth" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+              className={`whitespace-nowrap rounded px-1 py-1 text-[9px] font-semibold transition-colors ${activeTool === "depth" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
             >
               Depth relief
             </button>
@@ -771,7 +771,7 @@ export default function StudioWorkspace({
               role="tab"
               aria-selected={activeTool === "background"}
               onClick={() => setActiveTool("background")}
-              className={`rounded px-2 py-2 text-[10px] font-semibold transition-colors ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+              className={`whitespace-nowrap rounded px-1 py-1 text-[9px] font-semibold transition-colors ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
             >
               Remove background
             </button>
@@ -803,7 +803,7 @@ export default function StudioWorkspace({
           <button
             type="button"
             onClick={() => void handleTrySample()}
-            className="mt-2 rounded-md border border-[#343944] px-3 py-2 text-[11px] text-[#D3D6DC] transition-colors hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
+            className="mt-2 hidden rounded-md border border-[#343944] px-3 py-2 text-[11px] text-[#D3D6DC] transition-colors hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547] lg:inline-flex"
           >
             Try a sample
           </button>
@@ -814,12 +814,15 @@ export default function StudioWorkspace({
               {sourceImageData && ` · ${sourceImageData.width} × ${sourceImageData.height} px`}
             </p>
           )}
-          <fieldset className="mt-3 border-t border-[#292D35] pt-3">
-            <legend className="px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
-              {activeTool === "depth" ? "Depth settings" : "Removal settings"}
+          <fieldset className="mt-2 border-t border-[#292D35] pt-2">
+            <legend className="flex w-full items-center justify-between gap-1 px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
+              <span>{activeTool === "depth" ? "Depth settings" : "Removal settings"}</span>
+              <span className="whitespace-nowrap text-[8px] font-normal normal-case tracking-normal text-[#9D9484]">
+                {activeTool === "depth" ? `${CREDIT_COSTS.depthRelief} credits per relief` : `${CREDIT_COSTS.backgroundPng} credits per PNG`}
+              </span>
             </legend>
             {activeTool === "depth" ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <label className="block text-[11px] text-[#D3D6DC]">
                   <span className="flex justify-between">Relief strength <output>{reliefStrength}</output></span>
                   <input type="range" min="0" max="100" value={reliefStrength} onChange={(event) => setReliefStrength(Number(event.currentTarget.value))} className="mt-1.5 w-full accent-[#FFB547]" />
@@ -832,15 +835,9 @@ export default function StudioWorkspace({
                   <input type="checkbox" checked={treatDarkAsNear} onChange={(event) => updateDepthSettings(smoothing, event.currentTarget.checked)} className="size-4 accent-[#FFB547]" />
                   Treat dark areas as near
                 </label>
-                <div className="border-t border-[#292D35] pt-3">
-                  <p className="text-[11px] font-semibold text-[#D3D6DC]">Credit use</p>
-                  <p className="mt-1.5 text-[10px] text-[#8B929D]">{allowanceConfigured ? `${purchasedCredits ?? 0} credits available` : "Generation balance unavailable"}</p>
-                  {purchasedCredits !== null && <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.depthRelief} credits per depth relief</p>}
-                  <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.backgroundPng} credits per PNG export</p>
-                </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <label className="block text-[11px] text-[#D3D6DC]">
                   <span className="flex justify-between">Color tolerance <output>{colorTolerance}</output></span>
                   <input type="range" min="0" max="150" value={colorTolerance} onChange={(event) => setColorTolerance(Number(event.currentTarget.value))} className="mt-1.5 w-full accent-[#FFB547]" />
@@ -858,21 +855,23 @@ export default function StudioWorkspace({
               </div>
             )}
           </fieldset>
-          <div className="mt-3 border-t border-[#292D35] pt-3">
-            <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">Output</p>
-              <button type="button" onClick={() => activeTool === "depth" ? void handleGenerate() : void handleRemoveBackground()} disabled={!selectedFile || (activeTool === "depth" ? isGenerating || !canGenerate : isDownloading || !canExportBackground)} aria-describedby="generation-state" className="w-full rounded-md bg-[#FFB547] px-4 py-3 text-xs font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50">
-                {activeTool === "depth" ? "Generate depth relief" : isDownloading ? "Preparing PNG..." : "Download PNG"}
+          <div className="mt-2 border-t border-[#292D35] pt-2">
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">Output</p>
+                <p id="generation-state" role="status" className="mt-0.5 text-[9px] leading-3 text-[#8B929D]">
+                  {activeTool === "depth" ? disabledReason : !selectedFile ? "Upload a photo to continue." : isRemovingBackground ? "Updating background preview..." : !allowanceConfigured || purchasedCredits === null ? "Credit balance unavailable. Refresh or contact support." : purchasedCredits < CREDIT_COSTS.backgroundPng ? `Each PNG export costs ${CREDIT_COSTS.backgroundPng} credits. Buy a bundle to continue.` : `Preview ready. Downloading a PNG uses ${CREDIT_COSTS.backgroundPng} credits.`}
+                </p>
+              </div>
+              <button type="button" onClick={() => activeTool === "depth" ? void handleGenerate() : void handleRemoveBackground()} disabled={!selectedFile || (activeTool === "depth" ? isGenerating || !canGenerate : isDownloading || !canExportBackground)} aria-describedby="generation-state" className="shrink-0 rounded-md bg-[#FFB547] px-2.5 py-2 text-[9px] font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50">
+                {activeTool === "depth" ? "Generate relief" : isDownloading ? "Preparing PNG..." : "Download PNG"}
               </button>
-              <p id="generation-state" role="status" className="text-[10px] leading-4 text-[#8B929D]">
-                {activeTool === "depth" ? disabledReason : !selectedFile ? "Upload a photo to continue." : isRemovingBackground ? "Updating background preview..." : !allowanceConfigured || purchasedCredits === null ? "Credit balance unavailable. Refresh or contact support." : purchasedCredits < CREDIT_COSTS.backgroundPng ? `Each PNG export costs ${CREDIT_COSTS.backgroundPng} credits. Buy a bundle to continue.` : `Preview ready. Downloading a PNG uses ${CREDIT_COSTS.backgroundPng} credits.`}
-              </p>
+            </div>
               {allowanceConfigured && purchasedCredits !== null && ((activeTool === "depth" && purchasedCredits < CREDIT_COSTS.depthRelief) || (activeTool === "background" && purchasedCredits < CREDIT_COSTS.backgroundPng)) && (
                 <Link href="/billing" className="inline-flex justify-center rounded-md border border-[#3B414B] px-3 py-2 text-[10px] font-semibold text-[#E4E6EA] hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]">Buy credits</Link>
               )}
               {generationError && <p role="alert" className="text-[10px] text-rose-300">{generationError}</p>}
             </div>
-          </div>
         </aside>
 
         <section
