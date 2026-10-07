@@ -4,18 +4,18 @@ import { CREDIT_BUNDLES, CREDIT_COSTS, getCreditBundle } from "@/lib/billing/pla
 describe("credit bundles", () => {
   it("defines the agreed INR one-time bundle prices and credits", () => {
     expect(CREDIT_BUNDLES.weekly).toMatchObject({
-      amountInPaise: 100_000,
-      credits: 300,
+      amountInPaise: 50_000,
+      credits: 200,
       id: "weekly",
     });
     expect(CREDIT_BUNDLES.monthly).toMatchObject({
-      amountInPaise: 50_000,
+      amountInPaise: 100_000,
       credits: 500,
       id: "monthly",
     });
     expect(CREDIT_BUNDLES.sixMonths).toMatchObject({
       amountInPaise: 200_000,
-      credits: 699,
+      credits: 1_000,
       id: "sixMonths",
     });
   });

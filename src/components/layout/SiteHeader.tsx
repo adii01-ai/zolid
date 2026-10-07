@@ -1,23 +1,44 @@
+"use client";
+
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { usePathname } from "next/navigation";
 import SignOutButton from "@/components/auth/SignOutButton";
 
-export default async function SiteHeader() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userEmail = user?.email ?? "Account";
-  const userInitial = userEmail.charAt(0).toUpperCase();
-  let credits: number | null = null;
+export default function SiteHeader({
+  isAuthenticated,
+  userEmail,
+  credits,
+}: {
+  isAuthenticated: boolean;
+  userEmail: string | null;
+  credits: number | null;
+}) {
+  const pathname = usePathname();
+  const displayEmail = userEmail ?? "Account";
+  const userInitial = displayEmail.charAt(0).toUpperCase();
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("credits")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (typeof profile?.credits === "number") credits = profile.credits;
+  if (pathname === "/billing") {
+    return (
+      <header className="border-b border-[#24221E] bg-[#100F0D]">
+        <nav
+          aria-label="Billing navigation"
+          className="mx-auto flex min-h-[50px] w-full max-w-[602px] items-center justify-between px-4 sm:px-0"
+        >
+          <Link
+            href="/"
+            className="text-[13px] font-bold text-[#F5F3EE] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547]"
+          >
+            Zolid
+          </Link>
+          <Link
+            href="/studio"
+            className="text-[9px] text-[#D4D0C7] hover:text-[#FFB547] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547]"
+          >
+            <span aria-hidden="true">‹</span> Back to studio
+          </Link>
+        </nav>
+      </header>
+    );
   }
 
   const appLinks = [
@@ -39,7 +60,7 @@ export default async function SiteHeader() {
           Zolid
         </Link>
 
-        {user ? (
+        {isAuthenticated ? (
           <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-4">
             <div className="hidden items-center gap-5 text-sm text-neutral-300 md:flex">
               {appLinks.map((item) => (
@@ -68,13 +89,13 @@ export default async function SiteHeader() {
                 <span className="flex size-8 items-center justify-center rounded-full bg-[#34291C] font-semibold text-[#FFB547]">
                   {userInitial}
                 </span>
-                <span className="hidden max-w-40 truncate sm:block">{userEmail}</span>
+                <span className="hidden max-w-40 truncate sm:block">{displayEmail}</span>
                 <span aria-hidden="true" className="text-xs text-neutral-400">⌄</span>
               </summary>
               <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-md border border-neutral-700 bg-neutral-900 p-4 shadow-xl">
                 <p className="text-xs text-neutral-400">Signed in as</p>
-                <p className="mt-1 truncate text-sm font-medium text-neutral-100" title={userEmail}>
-                  {userEmail}
+                <p className="mt-1 truncate text-sm font-medium text-neutral-100" title={displayEmail}>
+                  {displayEmail}
                 </p>
                 <div className="mt-4 border-t border-neutral-800 pt-3">
                   <SignOutButton />

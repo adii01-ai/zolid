@@ -6,27 +6,27 @@ export const CREDIT_COSTS = {
 export const CREDIT_BUNDLES = {
   weekly: {
     id: "weekly",
-    name: "1 week",
-    credits: 300,
-    amountInPaise: 100_000,
-    displayPrice: "₹1,000",
-    description: "300 credits, purchased once. Credits do not expire.",
+    name: "1 Week",
+    credits: 200,
+    amountInPaise: 50_000,
+    displayPrice: "₹500",
+    description: "200 credits, purchased once. Credits do not expire.",
   },
   monthly: {
     id: "monthly",
-    name: "Monthly",
+    name: "1 Month",
     credits: 500,
-    amountInPaise: 50_000,
-    displayPrice: "₹500",
+    amountInPaise: 100_000,
+    displayPrice: "₹1,000",
     description: "500 credits, purchased once. Credits do not expire.",
   },
   sixMonths: {
     id: "sixMonths",
-    name: "6 months",
-    credits: 699,
+    name: "6 Months",
+    credits: 1_000,
     amountInPaise: 200_000,
     displayPrice: "₹2,000",
-    description: "699 credits, purchased once. Credits do not expire.",
+    description: "1,000 credits, purchased once. Credits do not expire.",
   },
 } as const;
 

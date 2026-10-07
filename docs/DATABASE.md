@@ -20,7 +20,9 @@ The profile-row lock serializes concurrent requests for one user. Reservation ro
 
 ## Purchases
 
-Payment checkout is not implemented. No UI action grants credits. When a payment provider is connected, its verified server-side webhook should call an idempotent credit-grant function and write a unique payment event to `credit_ledger`. Credit-pack sizes and plan allowances should be configured from trusted server-side product metadata, not frontend values.
+Stripe checkout grants credits only from its verified, idempotent server-side webhook through `grant_stripe_credit_bundle()`. The allowed credit amounts are maintained in the database function as well as `src/lib/billing/plans.ts`. When changing bundle credit quantities, apply a forward migration updating the function's allowlist before deploying the corresponding checkout configuration.
+
+Migration `0004_update_credit_bundle_amounts.sql` updates that allowlist for the current 200-, 500-, and 1,000-credit bundles. Apply it to the production Supabase project before deploying the matching app configuration; otherwise webhook credit grants for the 200- and 1,000-credit packs will fail.
 
 ## Applying and testing
 
