@@ -327,19 +327,22 @@ export default function AuthForm({
           <div className="auth-label-row">
             <label htmlFor="auth-email">Email</label>
           </div>
-          <input
-            id="auth-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.currentTarget.value)}
-            aria-invalid={Boolean(fieldErrors.email)}
-            aria-describedby={fieldErrors.email ? "auth-email-error" : undefined}
-            className="auth-input"
-            placeholder="you@example.com"
-          />
+          <div className="auth-input-wrap">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <input
+              id="auth-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.currentTarget.value)}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "auth-email-error" : undefined}
+              className="auth-input"
+              placeholder="you@example.com"
+            />
+          </div>
           {fieldErrors.email && <p id="auth-email-error" className="auth-field-error">{fieldErrors.email}</p>}
         </div>
 
@@ -353,7 +356,8 @@ export default function AuthForm({
                 </button>
               )}
             </div>
-            <div className="auth-password-wrap">
+            <div className="auth-password-wrap auth-input-wrap">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
               <input
                 id="auth-password"
                 name="password"
@@ -368,7 +372,11 @@ export default function AuthForm({
                 placeholder={isLogin ? "Your password" : "At least 8 characters"}
               />
               <button className="auth-password-toggle" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>
-                {showPassword ? "Hide" : "Show"}
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {showPassword && <path d="m4 4 16 16" />}
+                </svg>
               </button>
             </div>
             {fieldErrors.password && <p id="auth-password-error" className="auth-field-error">{fieldErrors.password}</p>}
@@ -385,6 +393,7 @@ export default function AuthForm({
           {isSubmitting
             ? recoveryMode ? "Sending reset link..." : isLogin ? "Signing in..." : "Creating account..."
             : recoveryMode ? "Send reset link" : isLogin ? "Sign in" : "Create account"}
+          {!isSubmitting && !recoveryMode && isLogin && <span aria-hidden="true" className="auth-submit-arrow">→</span>}
         </button>
       </form>
 
