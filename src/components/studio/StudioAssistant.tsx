@@ -10,9 +10,11 @@ type ChatMessage = {
 export default function StudioAssistant({
   open,
   onClose,
+  position,
 }: {
   open: boolean;
   onClose: () => void;
+  position: { left: number; bottom: number };
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -65,7 +67,15 @@ export default function StudioAssistant({
     <section
       id="studio-assistant-panel"
       aria-label="Studio AI assistant"
-      className="fixed inset-x-2 bottom-3 z-50 flex max-h-[min(660px,calc(100dvh-92px))] flex-col overflow-hidden rounded-lg border border-[#343944] bg-[#101318] shadow-2xl sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[360px] lg:bottom-5 lg:left-[232px]"
+      style={{
+        left: typeof window === "undefined"
+          ? position.left
+          : Math.min(position.left, Math.max(8, window.innerWidth - 368)),
+        bottom: typeof window === "undefined"
+          ? position.bottom + 52
+          : Math.min(position.bottom + 52, Math.max(8, window.innerHeight - 676)),
+      }}
+      className="fixed z-50 flex max-h-[min(660px,calc(100dvh-92px))] w-[min(360px,calc(100vw-16px))] flex-col overflow-hidden rounded-lg border border-[#343944] bg-[#101318] shadow-2xl"
     >
       <header className="flex items-center justify-between border-b border-[#292D35] px-4 py-3">
         <div>

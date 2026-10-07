@@ -50,7 +50,7 @@ export default async function StudioPage() {
   }
 
   return (
-    <main className="w-full px-4 pb-5 pt-3 sm:px-6 sm:pb-6 sm:pt-4 lg:pl-[232px]">
+    <main className="w-full px-4 pb-5 pt-3 sm:px-6 sm:pb-6 sm:pt-4">
       <StudioWorkspace
         credits={credits}
         allowanceConfigured={allowanceConfigured}

@@ -730,85 +730,6 @@ export default function StudioWorkspace({
 
   return (
     <>
-      <aside
-        aria-label="Studio navigation"
-        className="fixed inset-y-16 left-0 z-30 hidden w-[216px] flex-col border-r border-[#292D35] bg-[#090B0F] px-3 py-4 lg:flex"
-      >
-        <nav aria-label="Studio tools" className="grid gap-1">
-          <Link
-            href="/studio"
-            aria-current="page"
-            className="flex items-center gap-3 rounded-md bg-[#1B1E25] px-3 py-2.5 text-xs font-semibold text-[#FFB547]"
-          >
-            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#FFB547]/50 text-[10px]">C</span>
-            Create
-          </Link>
-          <Link href="/gallery" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs text-[#A9AFBA] hover:bg-[#15181E] hover:text-white">
-            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[10px]">G</span>
-            Gallery
-          </Link>
-          <Link href="/billing" className="flex items-center gap-3 rounded-md px-3 py-2.5 text-xs text-[#A9AFBA] hover:bg-[#15181E] hover:text-white">
-            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[10px]">$</span>
-            Billing
-          </Link>
-          <button
-            type="button"
-            aria-expanded={assistantOpen}
-            aria-controls="studio-assistant-panel"
-            onClick={() => setAssistantOpen((open) => !open)}
-            className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-xs ${assistantOpen ? "bg-[#1B1E25] font-semibold text-[#FFB547]" : "text-[#A9AFBA] hover:bg-[#15181E] hover:text-white"}`}
-          >
-            <span aria-hidden="true" className="grid size-5 place-items-center rounded border border-[#343944] text-[9px] font-semibold">AI</span>
-            Chat with AI
-          </button>
-        </nav>
-
-        <div className="mt-5 border-t border-[#252932] pt-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[11px] font-semibold text-[#C7CBD3]">Recent projects</h2>
-            <Link href="/gallery" className="text-[10px] text-[#8C929D] hover:text-[#FFB547]">View all</Link>
-          </div>
-          <ul className="grid gap-1.5">
-            {(recentGenerations ?? []).slice(0, 5).map((generation) => (
-              <li key={generation.id}>
-                <Link href="/gallery" className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-2 hover:bg-[#15181E]">
-                  {generation.previewDataUrl ? (
-                    <Image src={generation.previewDataUrl} alt="" width={34} height={34} unoptimized className="size-[34px] shrink-0 rounded object-cover" />
-                  ) : (
-                    <span aria-hidden="true" className="size-[34px] shrink-0 rounded bg-[#242833]" />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block truncate text-[10px] font-medium text-[#C7CBD3]">Depth relief</span>
-                    <time className="mt-0.5 block text-[9px] text-[#737A86]">
-                      {generation.completedAt ? new Date(generation.completedAt).toLocaleDateString("en", { month: "short", day: "numeric" }) : "Saved"}
-                    </time>
-                  </span>
-                </Link>
-              </li>
-            ))}
-            {sessionResults.slice(0, Math.max(0, 5 - (recentGenerations?.length ?? 0))).map((result) => (
-              <li key={result.id}>
-                <Link href="/gallery" className="flex min-w-0 items-center gap-2 rounded-md px-1.5 py-2 hover:bg-[#15181E]">
-                  <Image src={result.thumbnail} alt="" width={34} height={34} unoptimized className="size-[34px] shrink-0 rounded object-cover" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-[10px] font-medium text-[#C7CBD3]">{result.label}</span>
-                    <time className="mt-0.5 block text-[9px] text-[#737A86]">{result.time}</time>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {(recentGenerations?.length ?? 0) === 0 && sessionResults.length === 0 && (
-            <p className="px-1.5 py-2 text-[10px] leading-4 text-[#737A86]">Your recent creations will appear here.</p>
-          )}
-        </div>
-
-        <div className="mt-auto rounded-md border border-[#34302A] bg-[#111318] p-3">
-          <p className="text-[11px] font-semibold text-[#E4E6EA]">Need more credits?</p>
-          <p className="mt-1 text-[10px] leading-4 text-[#9298A2]">Pick up a one-time credit pack.</p>
-          <Link href="/billing" className="mt-2 inline-flex w-full justify-center rounded bg-[#FFB547] px-2 py-2 text-[10px] font-semibold text-[#15130F] hover:brightness-105">View plans</Link>
-        </div>
-      </aside>
       <button
         type="button"
         aria-expanded={assistantOpen}
@@ -821,7 +742,7 @@ export default function StudioWorkspace({
         onPointerCancel={handleAssistantPointerUp}
         onClick={handleAssistantClick}
         style={assistantLauncherPosition}
-        className="fixed z-40 touch-none select-none cursor-grab rounded-full border border-[#4A4030] bg-[#17191F] px-3 py-2 text-[11px] font-semibold text-[#FFB547] shadow-lg hover:bg-[#242833] active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-[#FFB547] lg:hidden"
+        className="fixed z-40 touch-none select-none cursor-grab rounded-full border border-[#4A4030] bg-[#17191F] px-3 py-2 text-[11px] font-semibold text-[#FFB547] shadow-lg hover:bg-[#242833] active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-[#FFB547]"
       >
         AI chat
       </button>
@@ -854,9 +775,9 @@ export default function StudioWorkspace({
       </div>
       <section
         aria-label="3D model creation workspace"
-        className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start"
+        className="grid grid-cols-1 gap-3 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start"
       >
-        <div className="order-1 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-1">
+        <aside aria-label="Image and generation controls" className="order-1 min-w-0 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-1 lg:row-start-1">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#828A96]">
@@ -895,11 +816,70 @@ export default function StudioWorkspace({
               {sourceImageData && ` · ${sourceImageData.width} × ${sourceImageData.height} px`}
             </p>
           )}
-        </div>
+          <fieldset className="mt-3 border-t border-[#292D35] pt-3">
+            <legend className="px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
+              {activeTool === "depth" ? "Depth settings" : "Removal settings"}
+            </legend>
+            {activeTool === "depth" ? (
+              <div className="space-y-3">
+                <label className="block text-[11px] text-[#D3D6DC]">
+                  <span className="flex justify-between">Relief strength <output>{reliefStrength}</output></span>
+                  <input type="range" min="0" max="100" value={reliefStrength} onChange={(event) => setReliefStrength(Number(event.currentTarget.value))} className="mt-1.5 w-full accent-[#FFB547]" />
+                </label>
+                <label className="block text-[11px] text-[#D3D6DC]">
+                  <span className="flex justify-between">Smoothing <output>{smoothing}</output></span>
+                  <input type="range" min="0" max="12" value={smoothing} onChange={(event) => updateDepthSettings(Number(event.currentTarget.value), treatDarkAsNear)} className="mt-1.5 w-full accent-[#FFB547]" />
+                </label>
+                <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
+                  <input type="checkbox" checked={treatDarkAsNear} onChange={(event) => updateDepthSettings(smoothing, event.currentTarget.checked)} className="size-4 accent-[#FFB547]" />
+                  Treat dark areas as near
+                </label>
+                <div className="border-t border-[#292D35] pt-3">
+                  <p className="text-[11px] font-semibold text-[#D3D6DC]">Credit use</p>
+                  <p className="mt-1.5 text-[10px] text-[#8B929D]">{allowanceConfigured ? `${purchasedCredits ?? 0} credits available` : "Generation balance unavailable"}</p>
+                  {purchasedCredits !== null && <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.depthRelief} credits per depth relief</p>}
+                  <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.backgroundPng} credits per PNG export</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="block text-[11px] text-[#D3D6DC]">
+                  <span className="flex justify-between">Color tolerance <output>{colorTolerance}</output></span>
+                  <input type="range" min="0" max="150" value={colorTolerance} onChange={(event) => setColorTolerance(Number(event.currentTarget.value))} className="mt-1.5 w-full accent-[#FFB547]" />
+                </label>
+                <label className="block text-[11px] text-[#D3D6DC]">
+                  <span className="flex justify-between">Edge softness <output>{edgeSoftness}</output></span>
+                  <input type="range" min="0" max="10" value={edgeSoftness} onChange={(event) => setEdgeSoftness(Number(event.currentTarget.value))} className="mt-1.5 w-full accent-[#FFB547]" />
+                </label>
+                <fieldset className="flex flex-wrap items-center gap-4">
+                  <legend className="mb-2 text-[11px] text-[#D3D6DC]">Background</legend>
+                  <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]"><input type="radio" name="background-choice" checked={backgroundMode === "transparent"} onChange={() => setBackgroundMode("transparent")} className="accent-[#FFB547]" />Transparent</label>
+                  <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]"><input type="radio" name="background-choice" checked={backgroundMode === "solid"} onChange={() => setBackgroundMode("solid")} className="accent-[#FFB547]" />Solid color</label>
+                  {backgroundMode === "solid" && <input aria-label="Solid background color" type="color" value={solidColor} onChange={(event) => setSolidColor(event.currentTarget.value)} />}
+                </fieldset>
+              </div>
+            )}
+          </fieldset>
+          <div className="mt-3 border-t border-[#292D35] pt-3">
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">Output</p>
+              <button type="button" onClick={() => activeTool === "depth" ? void handleGenerate() : void handleRemoveBackground()} disabled={!selectedFile || (activeTool === "depth" ? isGenerating || !canGenerate : isDownloading || !canExportBackground)} aria-describedby="generation-state" className="w-full rounded-md bg-[#FFB547] px-4 py-3 text-xs font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50">
+                {activeTool === "depth" ? "Generate depth relief" : isDownloading ? "Preparing PNG..." : "Download PNG"}
+              </button>
+              <p id="generation-state" role="status" className="text-[10px] leading-4 text-[#8B929D]">
+                {activeTool === "depth" ? disabledReason : !selectedFile ? "Upload a photo to continue." : isRemovingBackground ? "Updating background preview..." : !allowanceConfigured || purchasedCredits === null ? "Credit balance unavailable. Refresh or contact support." : purchasedCredits < CREDIT_COSTS.backgroundPng ? `Each PNG export costs ${CREDIT_COSTS.backgroundPng} credits. Buy a bundle to continue.` : `Preview ready. Downloading a PNG uses ${CREDIT_COSTS.backgroundPng} credits.`}
+              </p>
+              {allowanceConfigured && purchasedCredits !== null && ((activeTool === "depth" && purchasedCredits < CREDIT_COSTS.depthRelief) || (activeTool === "background" && purchasedCredits < CREDIT_COSTS.backgroundPng)) && (
+                <Link href="/billing" className="inline-flex justify-center rounded-md border border-[#3B414B] px-3 py-2 text-[10px] font-semibold text-[#E4E6EA] hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]">Buy credits</Link>
+              )}
+              {generationError && <p role="alert" className="text-[10px] text-rose-300">{generationError}</p>}
+            </div>
+          </div>
+        </aside>
 
         <section
           aria-labelledby="preview-heading"
-          className="order-2 min-w-0 self-start rounded-lg border border-[#292D35] bg-[#0D0F13] p-3 sm:p-4 lg:col-start-1 lg:row-start-1 lg:row-span-3"
+          className="order-2 min-h-[480px] min-w-0 rounded-lg border border-[#292D35] bg-[#0D0F13] p-3 sm:min-h-[620px] sm:p-4 lg:col-start-2 lg:row-start-1"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -1077,175 +1057,17 @@ export default function StudioWorkspace({
           )}
         </section>
 
-        <fieldset className="order-3 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-2">
-          <legend className="px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
-            {activeTool === "depth" ? "Depth settings" : "Removal settings"}
-          </legend>
-          {activeTool === "depth" ? (
-            <div className="space-y-3 rounded-md border border-[#292D35] bg-[#15181E] p-3">
-              <label className="block text-[11px] text-[#D3D6DC]">
-                <span className="flex justify-between">
-                  Relief strength <output>{reliefStrength}</output>
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={reliefStrength}
-                  onChange={(event) => setReliefStrength(Number(event.currentTarget.value))}
-                  className="mt-1.5 w-full accent-[#FFB547]"
-                />
-              </label>
-              <label className="block text-[11px] text-[#D3D6DC]">
-                <span className="flex justify-between">
-                  Smoothing <output>{smoothing}</output>
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="12"
-                  value={smoothing}
-                  onChange={(event) => updateDepthSettings(Number(event.currentTarget.value), treatDarkAsNear)}
-                  className="mt-1.5 w-full accent-[#FFB547]"
-                />
-              </label>
-              <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
-                <input
-                  type="checkbox"
-                  checked={treatDarkAsNear}
-                  onChange={(event) => updateDepthSettings(smoothing, event.currentTarget.checked)}
-                  className="size-4 accent-[#FFB547]"
-                />
-                Treat dark areas as near
-              </label>
-              <div className="border-t border-[#292D35] pt-3">
-                <p className="text-[11px] font-semibold text-[#D3D6DC]">Credit use</p>
-                <p className="mt-1.5 text-[10px] text-[#8B929D]">
-                  {allowanceConfigured
-                    ? `${purchasedCredits ?? 0} credits available`
-                    : "Generation balance unavailable"}
-                </p>
-                {purchasedCredits !== null && (
-                  <p className="mt-1 text-[10px] text-[#8B929D]">
-                      {CREDIT_COSTS.depthRelief} credits per depth relief
-                  </p>
-                )}
-                <p className="mt-1 text-[10px] text-[#8B929D]">{CREDIT_COSTS.backgroundPng} credits per PNG export</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3 rounded-md border border-[#292D35] bg-[#15181E] p-3">
-              <label className="block text-[11px] text-[#D3D6DC]">
-                <span className="flex justify-between">
-                  Color tolerance <output>{colorTolerance}</output>
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="150"
-                  value={colorTolerance}
-                  onChange={(event) => setColorTolerance(Number(event.currentTarget.value))}
-                  className="mt-1.5 w-full accent-[#FFB547]"
-                />
-              </label>
-              <label className="block text-[11px] text-[#D3D6DC]">
-                <span className="flex justify-between">
-                  Edge softness <output>{edgeSoftness}</output>
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={edgeSoftness}
-                  onChange={(event) => setEdgeSoftness(Number(event.currentTarget.value))}
-                  className="mt-1.5 w-full accent-[#FFB547]"
-                />
-              </label>
-              <fieldset className="flex flex-wrap items-center gap-4">
-                  <legend className="mb-2 text-[11px] text-[#D3D6DC]">Background</legend>
-                <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
-                  <input type="radio" name="background-choice" checked={backgroundMode === "transparent"} onChange={() => setBackgroundMode("transparent")} />
-                  Transparent
-                </label>
-                <label className="flex items-center gap-2 text-[11px] text-[#D3D6DC]">
-                  <input type="radio" name="background-choice" checked={backgroundMode === "solid"} onChange={() => setBackgroundMode("solid")} />
-                  Solid color
-                </label>
-                {backgroundMode === "solid" && (
-                  <input aria-label="Solid background color" type="color" value={solidColor} onChange={(event) => setSolidColor(event.currentTarget.value)} />
-                )}
-              </fieldset>
-            </div>
-          )}
-        </fieldset>
-
-        <div className="order-4 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-2 lg:row-start-3">
-          <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9BA2AD]">
-              Output
-            </p>
-            <button
-              type="button"
-              onClick={() =>
-                activeTool === "depth"
-                  ? void handleGenerate()
-                  : void handleRemoveBackground()
-              }
-              disabled={
-                !selectedFile ||
-                (activeTool === "depth"
-                  ? isGenerating || !canGenerate
-                  : isDownloading || !canExportBackground)
-              }
-              aria-describedby="generation-state"
-              className="w-full rounded-md bg-[#FFB547] px-4 py-3 text-xs font-semibold text-[#15130F] transition-colors hover:brightness-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB547] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {activeTool === "depth"
-                ? "Generate depth relief"
-                : isDownloading
-                  ? "Preparing PNG..."
-                  : "Download PNG"}
-            </button>
-            <p
-              id="generation-state"
-              role="status"
-              className="text-[10px] leading-4 text-[#8B929D]"
-            >
-              {activeTool === "depth"
-                ? disabledReason
-                : !selectedFile
-                  ? "Upload a photo to continue."
-                  : isRemovingBackground
-                    ? "Updating background preview..."
-                    : !allowanceConfigured || purchasedCredits === null
-                      ? "Credit balance unavailable. Refresh or contact support."
-                      : purchasedCredits < CREDIT_COSTS.backgroundPng
-                        ? `Each PNG export costs ${CREDIT_COSTS.backgroundPng} credits. Buy a bundle to continue.`
-                        : `Preview ready. Downloading a PNG uses ${CREDIT_COSTS.backgroundPng} credits.`}
-            </p>
-            {allowanceConfigured && purchasedCredits !== null && (
-              (activeTool === "depth" && purchasedCredits < CREDIT_COSTS.depthRelief) ||
-              (activeTool === "background" && purchasedCredits < CREDIT_COSTS.backgroundPng)
-            ) && (
-              <Link
-                href="/billing"
-                className="inline-flex justify-center rounded-md border border-[#3B414B] px-3 py-2 text-[10px] font-semibold text-[#E4E6EA] hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
-              >
-                Buy credits
-              </Link>
-            )}
-            {generationError && (
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <p role="alert" className="text-[10px] text-rose-300">
-                  {generationError}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
       </section>
 
-      <section aria-labelledby="session-results-heading" className="mt-5 lg:mr-[292px]">
+      <div className="mx-auto mt-4 flex w-full max-w-[1600px] justify-end">
+        <div className="rounded-md border border-[#34302A] bg-[#111318] px-3 py-2">
+          <p className="text-[11px] font-semibold text-[#E4E6EA]">Need more credits?</p>
+          <p className="mt-1 text-[10px] leading-4 text-[#9298A2]">Pick up a one-time credit pack.</p>
+          <Link href="/billing" className="mt-2 inline-flex w-full justify-center rounded bg-[#FFB547] px-2 py-2 text-[10px] font-semibold text-[#15130F] hover:brightness-105">View plans</Link>
+        </div>
+      </div>
+
+      <section aria-labelledby="session-results-heading" className="mt-5">
         <div className="mb-2 flex items-end justify-between border-b border-[#292D35] pb-2">
           <div>
             <h2 id="session-results-heading" className="text-sm font-semibold text-[#E4E6EA]">
@@ -1273,7 +1095,7 @@ export default function StudioWorkspace({
         )}
       </section>
 
-      <section aria-labelledby="recent-models-heading" className="mt-5 lg:mr-[292px]">
+      <section aria-labelledby="recent-models-heading" className="mt-5">
         <div className="flex items-center justify-between gap-4 border-b border-[#292D35] pb-2">
           <div>
             <h2
@@ -1348,7 +1170,11 @@ export default function StudioWorkspace({
           </ul>
         )}
       </section>
-      <StudioAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+      <StudioAssistant
+        open={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
+        position={assistantLauncherPosition}
+      />
       {toast && (
         <div
           role="status"
