@@ -786,7 +786,7 @@ export default function StudioWorkspace({
               role="tab"
               aria-selected={activeTool === "background"}
               onClick={() => setActiveTool("background")}
-              className={`whitespace-nowrap rounded px-1 py-1 text-[9px] font-semibold transition-colors ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+              className={`min-w-0 rounded px-0.5 py-1 text-center text-[8px] leading-tight font-semibold transition-colors sm:px-1 sm:text-[9px] ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
             >
               Remove Background
             </button>
