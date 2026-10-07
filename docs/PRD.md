@@ -1,10 +1,10 @@
-# PRD: Zolid Depth Relief Studio
+# PRD: Zolid Studio
 
 **Version:** 0.2 draft | **Date:** Oct 5, 2026 | **Status:** For review
 
 ## 1. Summary
 
-Zolid turns one uploaded image into an interactive front-facing depth relief that users can inspect and export as GLB. The product supports depth relief only.
+Zolid Studio turns images into interactive front-facing depth reliefs users can inspect and export as GLB. Studio also includes background removal and a provider-adaptable video generation panel. Video generation remains unavailable until a real provider is configured; it must never simulate successful output.
 
 ## 2. Product flow
 
@@ -51,6 +51,15 @@ Billing plans are displayed as pending while payment checkout is unimplemented. 
 - SECURITY DEFINER RPCs validate `auth.uid()` and perform reservation, completion, and cancellation atomically.
 - Images are sent to the authenticated server route for depth inference; the application must disclose its retention policy before launch.
 
-## 7. Out of scope
+## 7. Video generation (approved, provider pending)
+
+- Video generation is a separate Studio tool; the existing depth and background-removal flows remain unchanged.
+- Support image-to-video and text-to-video modes, aspect ratios `16:9`, `9:16`, `1:1`, `4:5`, durations 5/10/15 seconds, and resolutions 480p/720p/1080p.
+- The UI may enable only resolutions explicitly advertised by the configured provider. With no provider configured, resolution choices are disabled and generation returns a clear unavailable error.
+- Provider calls are isolated behind a server-side adapter. The browser submits settings to `POST /api/generate-video`; only a real provider result may be shown or downloaded.
+- Until provider cost/rate metadata and an atomic video-credit policy are defined, the video route must not charge or reserve credits and must not claim a price.
+- Video prompts are limited to 200 characters. Image inputs are validated as supported images at or below 10 MB and sent to the selected backend provider only when enabled.
+
+## 8. Out of scope
 
 Complete object reconstruction, text-to-3D, multi-image reconstruction, subscriptions, and payment checkout until separately implemented and verified.

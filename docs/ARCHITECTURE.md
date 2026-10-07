@@ -8,6 +8,11 @@ Browser (Next.js + R3F)
                                       │                 │
                                atomic reservation    relief mesh → viewer/GLB
 
+Browser (Studio video panel)
+  └─ POST /api/generate-video → authenticated provider-neutral service
+                                      │
+                                 provider adapter (not configured)
+
 Next.js API routes ──► Supabase Auth + Postgres
                               │
                      atomic reserve/complete/cancel
@@ -21,7 +26,7 @@ Paid plans are shown as pending until payment checkout is implemented.
 src/
   app/
     (marketing)/page.tsx            landing + Mode A demo
-    (app)/studio/page.tsx           upload + depth relief viewer
+    (app)/studio/page.tsx           upload + depth relief viewer + video panel
     (app)/gallery/page.tsx          past models
     (app)/billing/page.tsx          plan, credits, buy
     auth/                           login, signup, callback
@@ -29,11 +34,13 @@ src/
       depth/generate/route.ts       authenticated depth inference + quota reservation
       depth/complete/route.ts       atomic successful-generation debit
       depth/cancel/route.ts         release reservation after failure
+      generate-video/route.ts       authenticated provider-neutral video API
   components/
     viewer/ModelViewer.tsx
     upload/Dropzone.tsx
   lib/
     supabase/{client,server,admin}.ts
+    video/service.ts                provider adapter boundary (provider pending)
     server/{credits,jobs,stripe,rateLimit}.ts
     gpu/{adapter.ts,replicate.ts}   provider adapter interface
     export/{glb,obj,stl}.ts
@@ -56,6 +63,14 @@ tests/
 
 - `profiles.credits` remains the purchased credit balance; Stripe checkout is not implemented and no paid credits are issued yet.
 - Future plan credit amounts and prices must come from configured payment-product metadata, not client input or placeholder buttons.
+
+## Video generation
+
+- `StudioWorkspace` keeps the shared Preview Stage; video output is shown there, never in a second preview surface.
+- `VideoGenerationPanel` owns image-to-video/text-to-video form state and posts multipart input to `/api/generate-video`.
+- The route authenticates with Supabase, validates settings and image bytes/dimensions, then calls the provider-neutral `lib/video/service.ts` boundary.
+- No provider is currently configured. The route returns `VIDEO_SERVICE_NOT_CONFIGURED`; no mock output is returned and no credits are charged.
+- A provider adapter must advertise supported resolutions and provider costs. Resolution options remain disabled unless advertised. Video credit rates and atomic debit/refund behavior must be established from real provider costs before enabling an adapter.
 
 ## Storage
 

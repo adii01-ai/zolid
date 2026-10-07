@@ -11,7 +11,12 @@ vi.mock("@/lib/supabase/server", () => ({
 
 const reservationId = "d54d0749-9742-4ca0-9f2f-098c2ffcb936";
 
-function setupClient(rpcResult = { data: [{ purchased_credits: 10 }], error: null }) {
+function setupClient(
+  rpcResult: { data: unknown; error: unknown } = {
+    data: [{ purchased_credits: 10 }],
+    error: null,
+  },
+) {
   const rpc = vi.fn().mockResolvedValue(rpcResult);
   mocks.createSupabaseServerClient.mockResolvedValue({
     auth: {

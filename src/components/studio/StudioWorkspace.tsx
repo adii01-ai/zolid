@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "@/components/upload/Dropzone";
+import VideoGenerationPanel from "@/components/studio/VideoGenerationPanel";
 import type { DepthMap } from "@/types/depth";
 import { exportDepthReliefGlb } from "@/lib/export/glb";
 import { CREDIT_COSTS } from "@/lib/billing/plans";
@@ -39,7 +40,7 @@ type StudioWorkspaceProps = {
   recentGenerations: StudioGeneration[] | null;
 };
 
-type StudioTool = "depth" | "background";
+type StudioTool = "depth" | "background" | "video";
 
 type SessionResult = {
   id: string;
@@ -155,6 +156,10 @@ export default function StudioWorkspace({
   } | null>(null);
   const suppressAssistantClick = useRef(false);
   const [activeTool, setActiveTool] = useState<StudioTool>("depth");
+  const [videoOutputUrl, setVideoOutputUrl] = useState<string | null>(null);
+  const [videoSourceFile, setVideoSourceFile] = useState<File | null>(null);
+  const [videoSourceUrl, setVideoSourceUrl] = useState<string | null>(null);
+  const [isVideoGenerating, setIsVideoGenerating] = useState(false);
   const [showThreePreview, setShowThreePreview] = useState(false);
   const [showOriginalPreview, setShowOriginalPreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -387,6 +392,16 @@ export default function StudioWorkspace({
       imageRequest.current += 1;
     };
   }, [selectedFile]);
+
+  useEffect(() => {
+    if (!videoSourceFile) {
+      setVideoSourceUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(videoSourceFile);
+    setVideoSourceUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [videoSourceFile]);
 
   useEffect(() => {
     if (!sourceImageData || activeTool !== "background") return;
@@ -754,15 +769,15 @@ export default function StudioWorkspace({
         <aside aria-label="Image and generation controls" className="order-1 min-w-0 rounded-lg border border-[#292D35] bg-[#111318] p-3 sm:p-4 lg:col-start-1 lg:row-start-1">
           <div
             role="tablist"
-            aria-label="Image tools"
-            className="mb-2 grid grid-cols-2 rounded-md border border-[#37321F] bg-[#15130F] p-1"
+            aria-label="Studio tools"
+            className="mb-2 grid grid-cols-3 gap-0.5 rounded-md border border-[#37321F] bg-[#15130F] p-1"
           >
             <button
               type="button"
               role="tab"
               aria-selected={activeTool === "depth"}
               onClick={() => setActiveTool("depth")}
-              className={`whitespace-nowrap rounded px-1 py-1 text-[9px] font-semibold transition-colors ${activeTool === "depth" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+              className={`min-w-0 rounded px-0.5 py-1 text-[8px] leading-tight font-semibold transition-colors sm:px-1 sm:text-[9px] ${activeTool === "depth" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
             >
               Depth relief
             </button>
@@ -773,9 +788,26 @@ export default function StudioWorkspace({
               onClick={() => setActiveTool("background")}
               className={`whitespace-nowrap rounded px-1 py-1 text-[9px] font-semibold transition-colors ${activeTool === "background" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
             >
-              Remove background
+              Remove Background
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTool === "video"}
+              onClick={() => setActiveTool("video")}
+              className={`min-w-0 rounded px-0.5 py-1 text-[8px] leading-tight font-semibold transition-colors sm:px-1 sm:text-[9px] ${activeTool === "video" ? "bg-[#FFB547] text-[#15130F]" : "text-[#9D9484] hover:text-[#F3EDE2]"}`}
+            >
+              Video Generation
             </button>
           </div>
+          {activeTool === "video" ? (
+            <VideoGenerationPanel
+              onVideoChange={setVideoOutputUrl}
+              onSourceImageChange={setVideoSourceFile}
+              onGeneratingChange={setIsVideoGenerating}
+            />
+          ) : (
+          <>
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#828A96]">
@@ -872,6 +904,8 @@ export default function StudioWorkspace({
               )}
               {generationError && <p role="alert" className="text-[10px] text-rose-300">{generationError}</p>}
             </div>
+          </>
+          )}
         </aside>
 
         <section
@@ -906,7 +940,7 @@ export default function StudioWorkspace({
                   onClick={() => setShowOriginalPreview(false)}
                   className={`rounded px-2.5 py-1 text-[10px] font-medium ${!showOriginalPreview ? "bg-[#252A33] text-[#E4E6EA]" : "text-[#8B929D] hover:text-white"}`}
                 >
-                  3D View
+                  {activeTool === "video" ? "Video View" : "3D View"}
                 </button>
                 <button
                   type="button"
@@ -947,7 +981,41 @@ export default function StudioWorkspace({
               )}
             </div>
             <div className={`relative grid h-[320px] touch-none place-items-center overflow-hidden sm:h-[min(58vh,520px)] sm:min-h-[360px] ${activeTool === "background" && backgroundMode === "transparent" ? "bg-[linear-gradient(45deg,#171A20_25%,transparent_25%),linear-gradient(-45deg,#171A20_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#171A20_75%),linear-gradient(-45deg,transparent_75%,#171A20_75%)] bg-[length:24px_24px] bg-[position:0_0,0_12px,12px_-12px,-12px_0]" : "bg-[#090B0F] [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:40px_40px]"}`}>
-                {showOriginalPreview && imageUrl ? (
+                {activeTool === "video" ? (
+                  showOriginalPreview && videoSourceUrl ? (
+                    <Image
+                      src={videoSourceUrl}
+                      alt="Original video source image"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-contain p-5"
+                    />
+                  ) : videoOutputUrl ? (
+                    <video
+                      key={videoOutputUrl}
+                      src={videoOutputUrl}
+                      controls
+                      playsInline
+                      className="max-h-full max-w-full object-contain"
+                      aria-label="Generated video"
+                    />
+                  ) : isVideoGenerating ? (
+                    <div role="status" aria-live="polite" className="w-full max-w-sm px-6 text-center">
+                      <div className="mx-auto mb-4 h-1.5 overflow-hidden rounded-full bg-[#252932]">
+                        <div className="h-full w-2/5 animate-pulse rounded-full bg-[#FFB547]" />
+                      </div>
+                      <p className="text-sm font-medium text-[#D3D6DC]">Generating video...</p>
+                      <p className="mt-1 text-xs text-[#8B929D]">Please wait while your video is being created.</p>
+                    </div>
+                  ) : (
+                    <div className="max-w-xs px-4 text-center">
+                      <span aria-hidden="true" className="mb-3 block text-2xl text-[#8B929D]">🎥</span>
+                      <p className="text-xs text-[#8B929D]">Generated video will appear here</p>
+                      <p className="mt-1 text-[10px] text-[#747C88]">Choose a mode and provide the required input to begin.</p>
+                    </div>
+                  )
+                ) : showOriginalPreview && imageUrl ? (
                   <Image
                     src={imageUrl}
                     alt="Original uploaded image"
@@ -1033,6 +1101,19 @@ export default function StudioWorkspace({
                 )}
               </div>
             </div>
+          {activeTool === "video" && videoOutputUrl && (
+            <div className="mt-3 flex justify-end">
+              <a
+                href={videoOutputUrl}
+                download="zolid-video.mp4"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-[#37321F] px-3 py-1.5 text-[10px] font-semibold text-[#E4E6EA] hover:bg-[#1B1E25] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB547]"
+              >
+                Download Video
+              </a>
+            </div>
+          )}
           {depthMap && activeTool === "depth" && (
             <div className="mt-4 flex flex-wrap gap-2 border-t border-[#37321F] pt-4">
               <button

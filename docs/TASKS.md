@@ -53,3 +53,8 @@ Mark each task done only after you've tested it.
 - [ ] **6.2** Switch Stripe to live mode in production only; run a real small payment end to end.
 - [ ] **6.3** Closed beta with 10-20 users; measure cost per generation; set final prices at 3x or more of that cost.
 - [ ] **6.4** Public launch checklist: monitoring, error alerts, backups, support email.
+
+## Phase 7: Video generation (approved; provider pending)
+
+- [ ] **7.1** Add provider-neutral authenticated video generation API, Studio modes, input validation, and real-result preview. Keep generation unavailable until a real provider adapter and supported resolutions are configured; do not charge credits until provider costs and atomic credit rules are defined.
+- [ ] **7.2** Configure a production video provider, supported output settings, cost limits, and atomic per-generation credit policy; test real success, failure, timeout, and refund behavior before enabling generation.

@@ -23,3 +23,23 @@ Cancels an owned pending reservation after a viewer/client failure. Cancellation
 ## Paid plans
 
 Billing and plans are visible in the app, but payment checkout is not implemented. No paid credits are granted until verified payment processing is connected. Future credit pack amounts and plan allowances must come from server-side product configuration/payment metadata.
+
+## Video generation
+
+### GET /api/generate-video
+
+Returns provider configuration and supported resolutions:
+`{ ok: true, data: { configured: boolean, supportedResolutions: string[] } }`.
+
+### POST /api/generate-video
+
+Requires an authenticated Supabase session. Accepts multipart form data:
+
+- `mode`: `image-to-video` or `text-to-video`
+- `image`: required for image mode; JPG, PNG, or WebP, up to 10 MB and at least 256 px per side
+- `prompt`: at most 200 characters; required for text mode
+- `aspectRatio`: `16:9`, `9:16`, `1:1`, or `4:5`
+- `duration`: `5`, `10`, or `15` seconds
+- `resolution`: `480p`, `720p`, or `1080p`; accepted only when advertised by the configured provider
+
+Success returns `{ ok: true, data: { videoUrl } }` with a provider-generated HTTPS URL. Errors use `{ ok: false, error: { code, message } }`. Currently no provider is configured, so valid requests return `503 VIDEO_SERVICE_NOT_CONFIGURED`; no mock video is returned or credit charged. Video credit rates and atomic debit/refund behavior remain pending actual provider-cost configuration.
