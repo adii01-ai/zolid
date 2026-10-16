@@ -1682,7 +1682,10 @@ body {
 }
 
 @media (max-width: 900px) {
-  .auth-login-screen { grid-template-columns: 1fr; }
+  .auth-login-screen {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
 
   .auth-login-screen .auth-visual-panel {
     min-height: 0;
@@ -1696,7 +1699,11 @@ body {
   .auth-login-screen .auth-hero-title,
   .auth-login-screen .login-device-scene,
   .auth-login-screen .auth-visual-copy { display: none; }
-  .auth-login-screen .auth-form-panel { min-height: auto; padding: 38px 22px 48px; }
+  .auth-login-screen .auth-form-panel {
+    min-height: auto;
+    align-items: flex-start;
+    padding: 38px 22px 48px;
+  }
   .auth-login-screen .auth-form { max-width: 508px; }
 }
 
